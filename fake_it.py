@@ -9,6 +9,11 @@ def make_star_function(ad_base, nstars=10, border=0, fwhm=None, flux=1.):
     Create a function to add stars to an image at a series of random RA/dec
     coordinates. These coordinates are determined based on the sky coverage
     of a provided AstroData object.
+
+    The function created by this function takes an AD object as an argument
+    and adds stars at these positions. The idea, therefore, is to allow
+    multiple images, with different pointings, to produce observations of
+    the same counterfeit sky, possibly using the dither() function below.
     
     Parameters
     ----------

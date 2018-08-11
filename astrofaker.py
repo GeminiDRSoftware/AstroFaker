@@ -15,8 +15,9 @@ def Sersic(x, y, amplitude=1.0, r_e=1.0, n=4.0):
     return amplitude * np.exp(-b*(r/r_e)**m)
 
 def sliceable(fn):
-    # Works on a slice but can operate on a full AD if sent
-    # slice-by-slice
+    """Used to decorate functions that can operate on full AD instances or
+    slices. If a full AD is sent, then the function being decorated
+    operated on each slice in turn."""
     @wraps(fn)
     def gn(self, *args, **kwargs):
         if self.is_single:
@@ -27,7 +28,8 @@ def sliceable(fn):
     return gn
 
 def sliceonly(fn):
-    # Raises TypeError if NOT run on a slice
+    """Used to decorate functions that require only a single-extension
+    slice to be passed. Otherwise a TypeError is raised."""
     @wraps(fn)
     def gn(self, *args, **kwargs):
         if self.is_single:
@@ -39,7 +41,8 @@ def sliceonly(fn):
     return gn
 
 def noslice(fn):
-    # Raises TypeError if run on a slice
+    """Used to decorate functions that require only a full AD instance
+    to be passed. Otherwise a TypeError is raised."""
     @wraps(fn)
     def gn(self, *args, **kwargs):
         if not self.is_single:
@@ -51,8 +54,11 @@ def noslice(fn):
     return gn
 
 def convert_rd2xy(fn):
-    # Allows you to pass (ra,dec) instead of (x,y), and will determine which
-    # extension those world coordinates lie on if sent a full AD
+    """Most methods take (x,y) pixel values as parameters. This descriptor
+    will look for (ra, dec) parameters and convert them to (x,y) using the
+    WCS and send those values to the function being decorated. If the AD
+    has more than one extension, only the extension where the celestial
+    coordinates lie will be passed to the decorated function."""
     @wraps(fn)
     def gn(self, *args, **kwargs):
         ra = kwargs.get("ra")
@@ -120,6 +126,8 @@ class AstroFaker(object):
     ########################## SEEING DEFINITION ############################
     @property
     def seeing(self):
+        """The seeing is attached to an AD object to represent the observing
+        conditions without a need to keep track of it."""
         return self._seeing
 
     @seeing.setter
@@ -131,14 +139,36 @@ class AstroFaker(object):
             raise ValueError("Seeing must be positive!")
     ######################## HEADER FAKING METHODS ##########################
     @noslice
-    def add_extension(self, shape=None, dtype=np.float32, pixel_scale=None,
+    def add_extension(self, data=None, shape=None, pixel_scale=None,
                       pa=0, flip=False):
-        """Add an extension to the existing AD, with some header keywords"""
+        """
+        Add an extension to the existing AD, with some basic header keywords.
+
+        Parameters
+        ----------
+        data: array/None
+            data to add; if None, add zeros of specified shape
+        shape: tuple/None
+            dimensions of .data plane; if None, will use the shape of the
+            first extension (ignored if data is not None)
+        pixel_scale: float/None
+            pixel scale for this plane; if None, use the descriptor value
+        pa: float
+            position angle of WCS matrix
+        flip: bool
+            if True, flip the WCS (so East is to the right if North is up)
+        """
         # If no shape is provided, use the first extension's shape
-        if shape is None and len(self) > 0:
-            shape = self[0].nddata.shape
-        self.append(np.zeros(shape, dtype=dtype))
         extver = len(self)
+        if data is None:
+            if shape is None and len(self) > 0:
+                shape = self[0].nddata.shape
+            elif shape is None:
+                raise ValueError("Must specify a shape if data is None")
+            self.append(np.zeros(shape, dtype=np.float32))
+        else:
+            self.append(data)
+            shape = data.shape
         shape_value = '[1:{1},1:{0}]'.format(*shape)
         self[-1].hdr.update({'EXTNAME': 'SCI',
                              'EXTVER': extver,
@@ -189,7 +219,9 @@ class AstroFaker(object):
     def time_offset(self, seconds=0, minutes=0):
         """
         Change ut_datetime forward by specified amount. The new value is put in
-        the DATE-OBS keyword, which is the first place the descriptor looks
+        the DATE-OBS keyword, which is the first place the descriptor looks. So
+        even if that's not how the ut_datetime is normally determined, the
+        descriptor will return the desired value.
         
         Parameters
         ----------
@@ -235,7 +267,8 @@ class AstroFaker(object):
     @sliceable
     def add_poisson_noise(self, scale=1.0):
         """
-        Add Poisson-like noise (Normal distribution is used) to pixel data
+        Add Poisson-like noise (Normal distribution is used) to pixel data.
+        This does not affect the .variance plane.
         
         Parameters
         ----------
@@ -251,7 +284,8 @@ class AstroFaker(object):
     @sliceable
     def add_read_noise(self, scale=1.0):
         """
-        Add read noise (Normal distribution is used) to pixel data
+        Add read noise (Normal distribution is used) to pixel data. This
+        does not affect the .variance plane.
                 
         Parameters
         ----------
@@ -266,7 +300,7 @@ class AstroFaker(object):
     @sliceonly
     def add_object(self, obj):
         """
-        Adds an object to a particular extension
+        Add an object to a particular extension's .data plane.
         
         Parameters
         ----------
@@ -281,8 +315,8 @@ class AstroFaker(object):
     @sliceonly
     def add_star(self, amplitude=None, flux=None, fwhm=None, x=None, y=None):
         """
-        Adds a star (Gaussian2D object) at the specified location.
-        Decorated by convert_rd2xy so (ra,dec) can be given
+        Add a star (Gaussian2D object) at the specified location.
+        Decorated by convert_rd2xy so (ra,dec) can be given.
         
         Parameters
         ----------
@@ -309,7 +343,8 @@ class AstroFaker(object):
     @convert_rd2xy
     @sliceonly
     def add_galaxy(self, amplitude=None, n=4.0, r_e=1.0, axis_ratio=1.0, pa=0.0, x=None, y=None):
-        """Adds a Sersic profile galaxy, convolved with the seeing, at the
+        """
+        Adds a Sersic profile galaxy, convolved with the seeing, at the
         specified location.
         
         Parameters
