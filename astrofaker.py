@@ -1,8 +1,10 @@
+import astrodata
 import numpy as np
 from scipy.ndimage.filters import gaussian_filter
 import datetime
 from astropy.modeling import models
 from astropy.wcs import WCS
+from astropy.io.fits import PrimaryHDU
 from functools import wraps
 from types import MethodType
 
@@ -122,6 +124,30 @@ class AstroFaker(object):
                 pass
         # Do the "normal" thing if it's not a descriptor
         super(AstroFaker, self).__setattr__(name, value)
+
+    @classmethod
+    def create(cls, instrument, extra_keywords={}):
+        """
+        Create a minimal AstroFaker<Instrument> object with a PHU.
+
+        Parameters
+        ----------
+        instrument: str
+            Name of instrument
+        extra_keywords: dict-like
+            Additional header keywords to add to object
+        """
+        try:
+            assert instrument in ('F2', 'GMOS-N', 'GMOS-S', 'GNIRS', 'GSAOI')
+        except AssertionError:
+            raise ValueError("Unknown instrument {}".format(instrument))
+        phu = PrimaryHDU()
+
+        # For the instruments defined above, this is all that is required for
+        # astrodata.create() to produce an object of the correct class.
+        phu.header.update({'INSTRUME': instrument})
+        phu.header.update(extra_keywords)
+        return astrodata.create(phu)
 
     ########################## SEEING DEFINITION ############################
     @property

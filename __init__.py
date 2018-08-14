@@ -1,5 +1,6 @@
 from importlib import import_module
 from astrodata import factory
+from .astrofaker import AstroFaker
 from gemini_instruments.gemini import addInstrumentFilterWavelengths
 
 # Put in one place (i.e., here) all the stuff that the individual modules
@@ -23,3 +24,5 @@ factory.addClass(AstroFakerF2)
 factory.addClass(AstroFakerGmos)
 factory.addClass(AstroFakerGsaoi)
 factory.addClass(AstroFakerNiri)
+
+create = AstroFaker.create
