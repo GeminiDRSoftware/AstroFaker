@@ -177,6 +177,8 @@ class AstroFaker(object):
         shape: tuple/None
             dimensions of .data plane; if None, will use the shape of the
             first extension (ignored if data is not None)
+        dtype: datatype
+            datatype of data if data is None
         pixel_scale: float/None
             pixel scale for this plane; if None, use the descriptor value
         pa: float
