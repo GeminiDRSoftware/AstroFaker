@@ -165,8 +165,8 @@ class AstroFaker(object):
             raise ValueError("Seeing must be positive!")
     ######################## HEADER FAKING METHODS ##########################
     @noslice
-    def add_extension(self, data=None, shape=None, pixel_scale=None,
-                      pa=0, flip=False):
+    def add_extension(self, data=None, shape=None, dtype=np.float32,
+                      pixel_scale=None, pa=0, flip=False):
         """
         Add an extension to the existing AD, with some basic header keywords.
 
@@ -191,7 +191,7 @@ class AstroFaker(object):
                 shape = self[0].nddata.shape
             elif shape is None:
                 raise ValueError("Must specify a shape if data is None")
-            self.append(np.zeros(shape, dtype=np.float32))
+            self.append(np.zeros(shape, dtype=dtype))
         else:
             self.append(data)
             shape = data.shape
