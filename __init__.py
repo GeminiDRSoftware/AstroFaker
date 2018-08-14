@@ -8,6 +8,7 @@ from gemini_instruments.gemini import addInstrumentFilterWavelengths
 
 from .f2 import AstroFakerF2
 from .gmos import AstroFakerGmos
+from .gnirs import AstroFakerGnirs
 from .gsaoi import AstroFakerGsaoi
 from .niri import AstroFakerNiri
 
@@ -17,11 +18,13 @@ def add_instrument(instrument):
 
 add_instrument('f2')
 add_instrument('gmos')
+add_instrument('gnirs')
 add_instrument('gsaoi')
 add_instrument('niri')
 
 factory.addClass(AstroFakerF2)
 factory.addClass(AstroFakerGmos)
+factory.addClass(AstroFakerGnirs)
 factory.addClass(AstroFakerGsaoi)
 factory.addClass(AstroFakerNiri)
 
