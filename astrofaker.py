@@ -8,6 +8,11 @@ from astropy.io.fits import PrimaryHDU
 from functools import wraps
 from types import MethodType
 
+def cosd(angle):
+    return np.cos(np.radians(angle))
+def sind(angle):
+    return np.sin(np.radians(angle))
+
 @models.custom_model
 def Sersic(x, y, amplitude=1.0, r_e=1.0, n=4.0):
     m = 1.0/n
@@ -138,16 +143,35 @@ class AstroFaker(object):
             Additional header keywords to add to object
         """
         try:
-            assert instrument in ('F2', 'GMOS-N', 'GMOS-S', 'GNIRS', 'GSAOI')
+            assert instrument in ('F2', 'GMOS-N', 'GMOS-S', 'GNIRS', 'GSAOI', 'NIRI')
         except AssertionError:
             raise ValueError("Unknown instrument {}".format(instrument))
+        telescope = ('Gemini-North' if instrument in ('GMOS-N', 'GNIRS', 'NIRI')
+                     else 'Gemini-South')
+
         phu = PrimaryHDU()
 
         # For the instruments defined above, this is all that is required for
         # astrodata.create() to produce an object of the correct class.
         phu.header.update({'INSTRUME': instrument})
+
+        # Add some generic stuff to ensure basic functionality
+        phu.header.update({'TELESCOP': telescope, 'OBSERVAT': telescope,
+                           'RAOFFSET': 0., 'DECOFFSE': 0.,
+                           'PA': 0.})
         phu.header.update(extra_keywords)
-        return astrodata.create(phu)
+        ad = astrodata.create(phu)
+
+        # In case anything additional is required
+        ad._add_required_phu_keywords()
+        return ad
+
+    def _add_required_phu_keywords(self):
+        """
+        Method to add instrument-specific PHU keywords when creating an
+        AstroFaker object from scratch. May or may not be needed.
+        """
+        pass
 
     ########################## SEEING DEFINITION ############################
     @property
@@ -166,7 +190,7 @@ class AstroFaker(object):
     ######################## HEADER FAKING METHODS ##########################
     @noslice
     def add_extension(self, data=None, shape=None, dtype=np.float32,
-                      pixel_scale=None, pa=0, flip=False):
+                      pixel_scale=None, flip=False):
         """
         Add an extension to the existing AD, with some basic header keywords.
 
@@ -181,8 +205,6 @@ class AstroFaker(object):
             datatype of data if data is None
         pixel_scale: float/None
             pixel scale for this plane; if None, use the descriptor value
-        pa: float
-            position angle of WCS matrix
         flip: bool
             if True, flip the WCS (so East is to the right if North is up)
         """
@@ -203,7 +225,8 @@ class AstroFaker(object):
                              self._keyword_for('data_section'): shape_value,
                              self._keyword_for('detector_section'): shape_value,
                              self._keyword_for('array_section'): shape_value})
-        self.phu['PA'] = pa
+
+        pa = self.phu['PA']
         if len(self) == 1 and 'RA' in self.phu and 'DEC' in self.phu:
             self[-1].hdr.update({'CRVAL1': self.phu['RA'],
                                     'CRVAL2': self.phu['DEC'],
@@ -221,27 +244,49 @@ class AstroFaker(object):
                                     for i in (0,1) for j in (0,1)})
 
     @noslice
-    def pixel_offset(self, x_offset, y_offset):
+    def sky_offset(self, ra_offset, dec_offset):
         """
-        Apply offsets to the WCS CRPIXi values.
-        Assumes all extensions have the same orientation; if not, needs to
-        be overridden by an AstroFakerInstrument class
+        Update header keywords to simulate a shift in telescope pointing.
         
         Parameters
         ----------
-        x_offset: float
-            Shift in x-direction (+ve moves objects to the right)
-        y_offset: float
-            Shift in y-direction (+ve moves objects up)
+        ra_offset: float
+            Shift in RA (arcseconds)
+        dec_offset: float
+            Shift in declination (arcseconds)
         """
-        # TODO: We need to do detector_?_offset() too!
-        crpix1 = self.hdr['CRPIX1']
-        crpix2 = self.hdr['CRPIX2']
-        for ext, cr1, cr2 in zip(self, crpix1, crpix2):
-            ext.hdr['CRPIX1'] = cr1 + x_offset
-            ext.hdr['CRPIX2'] = cr2 + y_offset
-        self.phu[self._keyword_for('telescope_x_offset')] = x_offset
-        self.phu[self._keyword_for('telescope_y_offset')] = y_offset
+        self.phu['RAOFFSET'] += ra_offset
+        self.phu['DECOFFSE'] += dec_offset
+
+        pa = self.phu.get('PA', 0)
+        iaa = self.phu.get('IAA', 0)
+        # XOFFSET, YOFFSET
+        xoffset, yoffset = self._xymapping(ra_offset, dec_offset, pa=pa, iaa=iaa)
+        self.phu['XOFFSET'] = xoffset
+        self.phu['YOFFSET'] = yoffset
+
+        # POFFSET. QOFFSET
+        poffset, qoffset = self._pqmapping(ra_offset, dec_offset, pa=pa)
+        self.phu['POFFSET'] = poffset
+        self.phu['QOFFSET'] = qoffset
+
+        # WCS matrix
+        for ext in self:
+            ext.hdr['CRVAL1'] += ra_offset / (3600. * cosd(self.dec()))
+            ext.hdr['CRVAL2'] += dec_offset / 3600.
+
+    # These supporting methods can be overridden by instrument classes.
+    # TBH, I'm not sufficiently up to speed on all the coordinate systems
+    # to know whether these methods might be valid for all instruments.
+    def _xymapping(self, ra_offset, dec_offset, pa=0, iaa=0):
+        # Return XOFFSET, YOFFSET given RA, dec offsets
+        dx, dy = models.Rotation2D(angle=pa-iaa)(ra_offset, dec_offset)
+        return (-dx, -dy)
+
+    def _pqmapping(self, ra_offset, dec_offset, pa=0):
+        # Return POFFSET, QOFFSET given RA, dec offsets
+        dx, dy = models.Rotation2D(angle=pa)(ra_offset, dec_offset)
+        return (dx, dy)
 
     @noslice
     def time_offset(self, seconds=0, minutes=0):
