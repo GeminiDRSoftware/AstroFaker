@@ -2,7 +2,7 @@ from .astrofaker import AstroFaker, noslice
 from gemini_instruments.niri.adclass import AstroDataNiri
 
 class AstroFakerNiri(AstroFaker, AstroDataNiri):
-    def _add_required_phu_keywords(self):
+    def _add_required_phu_keywords(self, mode):
         self.phu['IAA'] = 270.56  # Value seen in recent headers
 
     @noslice

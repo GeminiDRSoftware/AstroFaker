@@ -64,7 +64,7 @@ def convert_rd2xy(fn):
     """Most methods take (x,y) pixel values as parameters. This descriptor
     will look for (ra, dec) parameters and convert them to (x,y) using the
     WCS and send those values to the function being decorated. If the AD
-    has more than one extension, only the extension where the celestial
+    has more than one extension, only the extension on which the celestial
     coordinates lie will be passed to the decorated function."""
     @wraps(fn)
     def gn(self, *args, **kwargs):
@@ -103,7 +103,7 @@ class AstroFaker(object):
         instance._descriptor_dict = {}
         return instance
 
-    def __setattr__(self, name, value):
+    def _setattr__(self, name, value):
         """
         Allow descriptor return values to be set directly, by overriding
         the method. This does not handle the descriptor arguments, which
@@ -130,15 +130,21 @@ class AstroFaker(object):
         # Do the "normal" thing if it's not a descriptor
         super(AstroFaker, self).__setattr__(name, value)
 
-    @classmethod
-    def create(cls, instrument, extra_keywords={}):
+    @staticmethod
+    def create(instrument, mode='IMAGE', extra_keywords={}):
         """
-        Create a minimal AstroFaker<Instrument> object with a PHU.
+        Create a minimal AstroFaker<Instrument> object with a PHU. This lives
+        here rather than as a method of each AstroFaker<Instrument> class so
+        that those classes don't need to be imported by the calling code.
 
         Parameters
         ----------
         instrument: str
             Name of instrument
+        mode: str/list/None
+            mode of observation, e.g., 'IMAGE', 'MOS'. This is passed to the
+            _add_required_phu_keywords() method, which should check for specific
+            strings being "in" this parameter, which could therefore be a list
         extra_keywords: dict-like
             Additional header keywords to add to object
         """
@@ -163,10 +169,10 @@ class AstroFaker(object):
         ad = astrodata.create(phu)
 
         # In case anything additional is required
-        ad._add_required_phu_keywords()
+        ad._add_required_phu_keywords(mode=mode)
         return ad
 
-    def _add_required_phu_keywords(self):
+    def _add_required_phu_keywords(self, mode):
         """
         Method to add instrument-specific PHU keywords when creating an
         AstroFaker object from scratch. May or may not be needed.
@@ -226,7 +232,10 @@ class AstroFaker(object):
                              self._keyword_for('detector_section'): shape_value,
                              self._keyword_for('array_section'): shape_value})
 
-        pa = self.phu['PA']
+        # For instruments with multiple extensions, the relationship between
+        # the WCS keywords on the extenstions has to be handled at the
+        # instrument level. Here we just deal with the case of creating the
+        # first extension and put the fiducial point in the middle.
         if len(self) == 1 and 'RA' in self.phu and 'DEC' in self.phu:
             self[-1].hdr.update({'CRVAL1': self.phu['RA'],
                                     'CRVAL2': self.phu['DEC'],
@@ -236,6 +245,7 @@ class AstroFaker(object):
                                     'CRPIX2': 0.5*(shape[0]+1)})
         if pixel_scale is None:
             pixel_scale = self.pixel_scale()
+        pa = self.phu.get('PA', 0)
         if pixel_scale is not None:
             cd_matrix = models.Rotation2D(angle=pa)(
                 *np.array([[pixel_scale if flip else -pixel_scale, 0],
