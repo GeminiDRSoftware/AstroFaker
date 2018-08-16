@@ -131,7 +131,8 @@ class AstroFaker(object):
         super(AstroFaker, self).__setattr__(name, value)
 
     @staticmethod
-    def create(instrument, mode='IMAGE', extra_keywords={}):
+    def create(instrument, mode='IMAGE', extra_keywords={},
+               filename='N20010101S0001.fits'):
         """
         Create a minimal AstroFaker<Instrument> object with a PHU. This lives
         here rather than as a method of each AstroFaker<Instrument> class so
@@ -147,6 +148,8 @@ class AstroFaker(object):
             strings being "in" this parameter, which could therefore be a list
         extra_keywords: dict-like
             Additional header keywords to add to object
+        filename: str
+            filename to give to created AD object
         """
         try:
             assert instrument in ('F2', 'GMOS-N', 'GMOS-S', 'GNIRS', 'GSAOI', 'NIRI')
@@ -170,6 +173,7 @@ class AstroFaker(object):
 
         # In case anything additional is required
         ad._add_required_phu_keywords(mode=mode)
+        ad.filename = filename
         return ad
 
     def _add_required_phu_keywords(self, mode):
@@ -215,7 +219,6 @@ class AstroFaker(object):
             if True, flip the WCS (so East is to the right if North is up)
         """
         # If no shape is provided, use the first extension's shape
-        extver = len(self)
         if data is None:
             if shape is None and len(self) > 0:
                 shape = self[0].nddata.shape
@@ -225,6 +228,7 @@ class AstroFaker(object):
         else:
             self.append(data)
             shape = data.shape
+        extver = len(self)
         shape_value = '[1:{1},1:{0}]'.format(*shape)
         self[-1].hdr.update({'EXTNAME': 'SCI',
                              'EXTVER': extver,
@@ -410,7 +414,7 @@ class AstroFaker(object):
         fwhm: float/None
             FWHM in arcseconds (if None, use seeing attribute)
         x, y: float
-            location of centre of star in pixels
+            location of centre of star in pixels [0-indexed]
             (Decorated by @convert_rd2xy so ra, dec can be specified)
         """
         sigma = 0.42466 * (fwhm or self.seeing) / self.pixel_scale()
@@ -425,7 +429,8 @@ class AstroFaker(object):
 
     @convert_rd2xy
     @sliceonly
-    def add_galaxy(self, amplitude=None, n=4.0, r_e=1.0, axis_ratio=1.0, pa=0.0, x=None, y=None):
+    def add_galaxy(self, amplitude=None, n=4.0, r_e=1.0, axis_ratio=1.0,
+                   pa=0.0, x=None, y=None):
         """
         Adds a Sersic profile galaxy, convolved with the seeing, at the
         specified location.
@@ -441,13 +446,13 @@ class AstroFaker(object):
         axis_ratio: float
             ratio of major to minor axis
         pa: float
-            position angle (in pixel space) of major axis
-        TODO: Convert to sky PA
-        x, y: float
+            position angle of major axis
+        x, y: float [0-indexed]
             location of centre of star in pixels
             (Decorated by @convert_rd2xy so ra, dec can be specified)
         """
-        obj = ((models.Shift(-x) & models.Shift(-y)) | models.Rotation2D(-pa) |
+        obj = ((models.Shift(-x) & models.Shift(-y)) |
+                models.Rotation2D(self.phu.get('PA', 0)-pa) |
                (models.Scale(axis_ratio) & models.Identity(1)) |
                Sersic(amplitude=amplitude, r_e=r_e/self.pixel_scale(), n=n))
         ygrid, xgrid = np.mgrid[:self.data.shape[0], :self.data.shape[1]]
