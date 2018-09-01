@@ -1,4 +1,4 @@
-from .astrofaker import AstroFaker
+from .astrofaker import AstroFaker, noslice
 from gemini_instruments.f2.adclass import AstroDataF2
 
 class AstroFakerF2(AstroFaker, AstroDataF2):
@@ -7,3 +7,8 @@ class AstroFakerF2(AstroFaker, AstroDataF2):
 
         if 'IMAGE' in mode:
             self.phu['GRISM'] = 'Open'
+
+    @noslice
+    def init_default_extensions(self):
+        del self[:]
+        self.add_extension(shape=(2048,2048), pixel_scale=0.179)

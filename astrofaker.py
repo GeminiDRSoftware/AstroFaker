@@ -1,10 +1,14 @@
+from future.utils import with_metaclass
+from builtins import object
+import abc
+
 import astrodata
 import numpy as np
 from scipy.ndimage.filters import gaussian_filter
 import datetime
 from astropy.modeling import models
 from astropy.wcs import WCS
-from astropy.io.fits import PrimaryHDU
+from astropy.io.fits import Header, PrimaryHDU
 from functools import wraps
 from types import MethodType
 
@@ -87,14 +91,15 @@ def convert_rd2xy(fn):
                     print "Location not on any extensions"
                     return
             del kwargs["ra"], kwargs["dec"]
-            ret_value = fn(slice, x=x, y=y, *args, **kwargs)
+            kwargs.update({"x": x, "y": y})
+            ret_value = fn(slice, *args, **kwargs)
         else:
             ret_value = fn(self, *args, **kwargs)  # unchanged
         return ret_value
     return gn
 
 ############################ ASTROFAKER CLASS ###############################
-class AstroFaker(object):
+class AstroFaker(with_metaclass(abc.ABCMeta, object)):
     def __new__(cls, *args, **kwargs):
         """Since we never call an AstroFakerInstrument's __init__(), we set
         up the the internal attributes here"""
@@ -131,7 +136,7 @@ class AstroFaker(object):
         super(AstroFaker, self).__setattr__(name, value)
 
     @staticmethod
-    def create(instrument, mode='IMAGE', extra_keywords={},
+    def create(header, mode='IMAGE', extra_keywords={},
                filename='N20010101S0001.fits'):
         """
         Create a minimal AstroFaker<Instrument> object with a PHU. This lives
@@ -140,8 +145,8 @@ class AstroFaker(object):
 
         Parameters
         ----------
-        instrument: str
-            Name of instrument
+        header: str/PHU
+            Name of instrument or PHU to start from
         mode: str/list/None
             mode of observation, e.g., 'IMAGE', 'MOS'. This is passed to the
             _add_required_phu_keywords() method, which should check for specific
@@ -151,35 +156,52 @@ class AstroFaker(object):
         filename: str
             filename to give to created AD object
         """
-        try:
-            assert instrument in ('F2', 'GMOS-N', 'GMOS-S', 'GNIRS', 'GSAOI', 'NIRI')
-        except AssertionError:
-            raise ValueError("Unknown instrument {}".format(instrument))
-        telescope = ('Gemini-North' if instrument in ('GMOS-N', 'GNIRS', 'NIRI')
-                     else 'Gemini-South')
+        from_scratch = True
+        if isinstance(header, (PrimaryHDU, Header)):
+            phu = header
+            from_scratch = False
+        else:
+            try:
+                assert header in ('F2', 'GMOS-N', 'GMOS-S', 'GNIRS', 'GSAOI', 'NIRI')
+            except AssertionError:
+                raise ValueError("Unknown instrument {}".format(header))
+            telescope = ('Gemini-North' if header in ('GMOS-N', 'GNIRS', 'NIRI')
+                         else 'Gemini-South')
 
-        phu = PrimaryHDU()
+            phu = PrimaryHDU()
 
-        # For the instruments defined above, this is all that is required for
-        # astrodata.create() to produce an object of the correct class.
-        phu.header.update({'INSTRUME': instrument})
+            # For the instruments defined above, this is all that is required for
+            # astrodata.create() to produce an object of the correct class.
+            phu.header.update({'INSTRUME': header})
 
-        # Add some generic stuff to ensure basic functionality
-        phu.header.update({'TELESCOP': telescope, 'OBSERVAT': telescope,
-                           'RAOFFSET': 0., 'DECOFFSE': 0.,
-                           'PA': 0.})
-        phu.header.update(extra_keywords)
+            # Add some generic stuff to ensure basic functionality
+            phu.header.update({'TELESCOP': telescope, 'OBSERVAT': telescope,
+                               'RA': 180., 'DEC': 0., 'PA': 0.,
+                               'RAOFFSET': 0., 'DECOFFSE': 0.,
+                               'XOFFSET': 0., 'YOFFSET': 0.,
+                               'POFFSET': 0., 'QOFFSET': 0.})
+
         ad = astrodata.create(phu)
+        ad.phu['ORIGNAME'] = filename
 
         # In case anything additional is required
-        ad._add_required_phu_keywords(mode=mode)
+        if from_scratch:
+            ad.phu[ad._keyword_for('exposure_time')] = 10.
+            ad._add_required_phu_keywords(mode=mode)
+
+        ad.phu.update(extra_keywords)
         ad.filename = filename
         return ad
 
+    @staticmethod
+    def open(source):
+        return astrodata.open(source)
+
+    @abc.abstractmethod
     def _add_required_phu_keywords(self, mode):
         """
         Method to add instrument-specific PHU keywords when creating an
-        AstroFaker object from scratch. May or may not be needed.
+        AstroFaker object from scratch. Defined by subclasses
         """
         pass
 
@@ -197,10 +219,11 @@ class AstroFaker(object):
             self._seeing = value
         else:
             raise ValueError("Seeing must be positive!")
-    ######################## HEADER FAKING METHODS ##########################
+
+    ##################### DATA INITIALIZATION METHODS #######################
     @noslice
     def add_extension(self, data=None, shape=None, dtype=np.float32,
-                      pixel_scale=None, flip=False):
+                      pixel_scale=None, flip=False, extra_keywords={}):
         """
         Add an extension to the existing AD, with some basic header keywords.
 
@@ -217,6 +240,8 @@ class AstroFaker(object):
             pixel scale for this plane; if None, use the descriptor value
         flip: bool
             if True, flip the WCS (so East is to the right if North is up)
+        extra_keywords: dict
+            extra keywords to put in this extension's Header
         """
         # If no shape is provided, use the first extension's shape
         if data is None:
@@ -256,7 +281,13 @@ class AstroFaker(object):
                            [0, pixel_scale]]) / 3600.0)
             self[-1].hdr.update({'CD{}_{}'.format(i+1, j+1): cd_matrix[i][j]
                                     for i in (0,1) for j in (0,1)})
+        self[-1].hdr.update(extra_keywords)
 
+    @abc.abstractmethod
+    def init_default_extensions(self):
+        pass
+
+    ######################## HEADER FAKING METHODS ##########################
     @noslice
     def sky_offset(self, ra_offset, dec_offset):
         """
@@ -272,17 +303,15 @@ class AstroFaker(object):
         self.phu['RAOFFSET'] += ra_offset
         self.phu['DECOFFSE'] += dec_offset
 
-        pa = self.phu.get('PA', 0)
-        iaa = self.phu.get('IAA', 0)
         # XOFFSET, YOFFSET
-        xoffset, yoffset = self._xymapping(ra_offset, dec_offset, pa=pa, iaa=iaa)
-        self.phu['XOFFSET'] = xoffset
-        self.phu['YOFFSET'] = yoffset
+        xoffset, yoffset = self._xymapping(ra_offset, dec_offset)
+        self.phu['XOFFSET'] += xoffset
+        self.phu['YOFFSET'] += yoffset
 
         # POFFSET. QOFFSET
-        poffset, qoffset = self._pqmapping(ra_offset, dec_offset, pa=pa)
-        self.phu['POFFSET'] = poffset
-        self.phu['QOFFSET'] = qoffset
+        poffset, qoffset = self._pqmapping(ra_offset, dec_offset)
+        self.phu['POFFSET'] += poffset
+        self.phu['QOFFSET'] += qoffset
 
         # WCS matrix
         for ext in self:
@@ -292,13 +321,16 @@ class AstroFaker(object):
     # These supporting methods can be overridden by instrument classes.
     # TBH, I'm not sufficiently up to speed on all the coordinate systems
     # to know whether these methods might be valid for all instruments.
-    def _xymapping(self, ra_offset, dec_offset, pa=0, iaa=0):
+    def _xymapping(self, ra_offset, dec_offset):
         # Return XOFFSET, YOFFSET given RA, dec offsets
+        pa = self.phu.get('PA', 0)
+        iaa = self.phu.get('IAA', 0)
         dx, dy = models.Rotation2D(angle=pa-iaa)(ra_offset, dec_offset)
         return (-dx, -dy)
 
-    def _pqmapping(self, ra_offset, dec_offset, pa=0):
+    def _pqmapping(self, ra_offset, dec_offset):
         # Return POFFSET, QOFFSET given RA, dec offsets
+        pa = self.phu.get('PA', 0)
         dx, dy = models.Rotation2D(angle=pa)(ra_offset, dec_offset)
         return (dx, dy)
 
@@ -335,6 +367,7 @@ class AstroFaker(object):
             cd_matrix = models.Rotation2D(angle)(*WCS(ext.hdr).wcs.cd)
             ext.hdr.update({'CD{}_{}'.format(i+1, j+1): cd_matrix[i][j]
                              for i in (0, 1) for j in (0, 1)})
+        self.phu['PA'] = (self.phu.get('PA', 0) + angle) % 360
 
     ######################### PIXEL FAKING METHODS ##########################
     @sliceable

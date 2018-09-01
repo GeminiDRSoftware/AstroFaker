@@ -79,25 +79,24 @@ def dither(ad_base, cycles=1, shape=(3,3), offset=10, rms=0, add_objects=None,
         Call add_read_noise() and add_poisson_noise() after creation?
     """
     adinputs = []
-    offset /= ad_base.pixel_scale()
     exptime = ad_base.exposure_time()
     time_since_start = 0.
     for cycle in range(cycles):
         for iy in range(shape[1]):
-            yoff = (iy - 0.5 * shape[1]) * offset
+            yoff = (iy - 0.5 * (shape[1]-1)) * offset
             for ix in range(shape[0]):
-                xoff = (ix - 0.5 * shape[0]) * offset
+                xoff = (ix - 0.5 * (shape[0]-1)) * offset
                 ad = deepcopy(ad_base)
                 ad.time_offset(seconds=time_since_start)
                 time_since_start += exptime+5.
                 ad.update_filename(suffix="_{}{}{}".format(cycle if cycles>1 else '',
                                                            ix, iy))
                 ad.phu['ORIGNAME'] = ad.filename
-                dx, dy = rms * np.random.randn(2) / ad.pixel_scale()
-                ad.pixel_offset(xoff+dx, yoff+dy)
+                dx, dy = rms * np.random.randn(2)
+                ad.sky_offset(xoff+dx, yoff+dy)
                 if add_objects is not None:
                     add_objects(ad)
-                ad.pixel_offset(-dx, -dy)
+                ad.sky_offset(-dx, -dy)
                 if add_noise:
                     ad.add_poisson_noise()
                     ad.add_read_noise()

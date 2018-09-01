@@ -10,4 +10,7 @@ AstroFaker Manual
    :maxdepth: 2
 
    intro
+   overview
+   classes
+   methods
    ack
