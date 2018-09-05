@@ -26,6 +26,8 @@ class AstroFakerGmos(AstroFaker, AstroDataGmos):
     def init_default_extensions(self, num_ext=12, binning=1, overscan=True):
         if num_ext != 12:
             raise NotImplementedError("Only tested for full array ROI")
+        if binning not in (1, 2, 4):
+            raise ValueError("Binning must be 1, 2, or 4")
 
         del self[:]
         shape = (4224 // binning, 512 // binning + (BIAS_WIDTH if overscan else 0))
@@ -40,6 +42,9 @@ class AstroFakerGmos(AstroFaker, AstroDataGmos):
         crpix2_list = CRPIX2N if north else CRPIX2S
         chip_gap = 67. if north else 61.
 
+        extra_keywords = {'CRVAL1': self.phu['RA'], 'CRVAL2': self.phu['DEC'],
+                          'CTYPE1': 'RA---TAN', 'CTYPE2': 'DEC--TAN',
+                          'CCDSUM': '{} {}'.format(binning, binning)}
         for i in range(num_ext):
             ccd = i // 4
             crpix2 = (crpix2_list[ccd] - 0.5) / binning + 0.5
@@ -56,10 +61,10 @@ class AstroFakerGmos(AstroFaker, AstroDataGmos):
             arrx2 = arrx1 + 512
             arraysec = '[{}:{},1:4224]'.format(arrx1, arrx2)
 
-            extra_keywords = {self._keyword_for('detector_section'): detsec,
+            extra_keywords.update({self._keyword_for('detector_section'): detsec,
                               self._keyword_for('data_section'): datasec,
                               self._keyword_for('array_section'): arraysec,
-                              'CRPIX1': crpix1+datx1, 'CRPIX2': crpix2}
+                              'CRPIX1': crpix1+datx1, 'CRPIX2': crpix2})
 
             crpix1 -= (datx2-datx1)
             # This isn't entirely right but it'll do

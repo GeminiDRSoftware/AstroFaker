@@ -4,10 +4,13 @@ Overview
 ********
 
 DRAGONS (Data Reduction for Astronomy from Gemini Observatory North and South)
-comprises three separate packages:
+comprises four separate packages:
 
-* ``astrodata``, which defines classes for instruments and provides a
-  uniform interface to the data and metadata via descriptors
+* ``astrodata``, which defines a uniform access structure for astronomical
+  data
+
+* ``gemini_instruments``, which provides a high-level interface for access
+  to metadata via methods known as *descriptors*
 
 * ``geminidr``, which defines primitives to manipulate the data and recipes
   that link together primitives to provide full reduction of raw data
@@ -16,7 +19,7 @@ comprises three separate packages:
   automatically associates the primitives and recipes with the input data
 
 AstroFaker replaces the standard ``gemini_instruments`` module associated
-with ``astrodata``, providing its own subclasses for Gemini instruments
+with ``astrodata``. It provides its own subclasses for Gemini instruments
 that are extended from the ``astrodata`` classes with the addition of the
 ``AstroFaker`` mixin.
 
@@ -64,7 +67,7 @@ The code in ``AstroFaker/__init__.py`` is::
   create = AstroFaker.create
 
 The ``add_instrument()`` function performs the essential housekeeping that was
-done by the individual ``__init__``s in the ``gemini_instruments`` modules:
+done by the individual ``__init__``\s in the ``gemini_instruments`` modules:
 the dictionary of filter wavelengths is added to the internal database, and
 the AstroFaker subclass is registered with the AstroData factory. Due to the
 use of dynamic loading, the naming convention must be adhered to rigidly, with
@@ -74,8 +77,8 @@ class ``AstroFakerGnirs``.
 
 
 
-Do I need to import astrodata?
-==============================
+Do I still need to import astrodata?
+====================================
 
 In general, no. The ``astrodata.open`` and ``astrodata.create`` methods are
 superseded by ``AstroFaker`` class methods with the same names.

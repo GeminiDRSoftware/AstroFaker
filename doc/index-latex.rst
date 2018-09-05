@@ -13,4 +13,5 @@ AstroFaker Manual
    overview
    classes
    methods
+   functions
    ack

@@ -15,7 +15,7 @@ This is used by some of the data-faking methods to determine the morphology
 of fake objects. It is specified in arcseconds and the default value is 0.8.
 
 It is generally advised that fake datasets be constructed in such a way as
-to have them handled by the standard ``gemini_instrument`` classes. However,
+to have them handled by the standard ``gemini_instruments`` classes. However,
 in some cases the mapping between header keywords and descriptors may be
 complex and, for ease-of-use, the base ``AstroFaker`` class allows the
 descriptor methods it inherits from the standard instrument class to be

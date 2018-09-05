@@ -43,7 +43,7 @@ an instrument-specific subclass.
 
   filename
      A *string* with the full filename (including extension). This is placed in
-     the *ORIGNAME* keywords and assigned to the *filename* and *_orig_filename*
+     the *ORIGNAME* keyword and assigned to the *filename* and *_orig_filename*
      attributes of the created object.
 
 **open** *(source)*
@@ -72,6 +72,12 @@ Decorators
   decorated method on that extension only with the pixel coordinates determined
   from the WCS. The decorated method should *not* have *ra* and *dec* parameters
   in its call signature.
+
+.. todo::
+
+   This only applies the method to the slice where the object center lies, so
+   large objects will be truncated at the extension boundaries, rather than
+   cross over onto adjacent extensions.
 
 **noslice**
 
@@ -272,7 +278,7 @@ Pixel-faking methods
 
   obj
     A callable that takes two arrays as arguments, representing the x- and
-    y-pixel ordinates, and returns the amplitude of the "object" at that
+    y-pixel coordinates, and returns the amplitude of the "object" at that
     pixel location. It is likely that this will be an instance of an
     ``astropy.modeling.models.Model`` object.
 
@@ -282,9 +288,9 @@ Pixel-faking methods
   This method simulates the effect of photon shot noise on the data by
   adding Gaussian random variates to the pixel data. The standard deviation
   of these variates is given by the square root of the counts in electrons
-  of each pixel, multiplied by the supplied scale factor. Appropriate
-  scaling is performed if the data are in ADU, using the value of the
-  *gain* descriptor.
+  of each pixel (or zero for negative pixel values), multiplied by the
+  supplied scale factor. Appropriate scaling is performed if the data are
+  in ADU, using the value of the *gain* descriptor.
 
   This method can be run on a sliced or unsliced object.
 

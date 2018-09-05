@@ -69,7 +69,9 @@ def convert_rd2xy(fn):
     will look for (ra, dec) parameters and convert them to (x,y) using the
     WCS and send those values to the function being decorated. If the AD
     has more than one extension, only the extension on which the celestial
-    coordinates lie will be passed to the decorated function."""
+    coordinates lie will be passed to the decorated function.
+
+    TODO: Cope with objects that cross extension boundaries"""
     @wraps(fn)
     def gn(self, *args, **kwargs):
         ra = kwargs.get("ra")
@@ -270,8 +272,8 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
                                     'CRVAL2': self.phu['DEC'],
                                     'CTYPE1': 'RA---TAN',
                                     'CTYPE2': 'DEC--TAN',
-                                    'CRPIX1': 0.5*(shape[1]+1),
-                                    'CRPIX2': 0.5*(shape[0]+1)})
+                                    'CRPIX1': 0.5*(shape[-1]+1),
+                                    'CRPIX2': 0.5*(shape[-2]+1)})
         if pixel_scale is None:
             pixel_scale = self.pixel_scale()
         pa = self.phu.get('PA', 0)
@@ -427,7 +429,7 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
         obj: function/Model
             must return pixel value of object at each pixel in image
         """
-        ygrid, xgrid = np.mgrid[:self.data.shape[0], :self.data.shape[1]]
+        ygrid, xgrid = np.mgrid[:self.data.shape[-2], :self.data.shape[-1]]
         obj_data = obj(xgrid, ygrid)
         self.add(obj_data)
 
@@ -488,7 +490,7 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
                 models.Rotation2D(self.phu.get('PA', 0)-pa) |
                (models.Scale(axis_ratio) & models.Identity(1)) |
                Sersic(amplitude=amplitude, r_e=r_e/self.pixel_scale(), n=n))
-        ygrid, xgrid = np.mgrid[:self.data.shape[0], :self.data.shape[1]]
+        ygrid, xgrid = np.mgrid[:self.data.shape[-2], :self.data.shape[-1]]
         obj_data = obj(xgrid, ygrid)
         sigma = 0.42466 * self.seeing / self.pixel_scale()
         convolved_data = gaussian_filter(obj_data, sigma=sigma, mode='constant')
