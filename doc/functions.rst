@@ -5,16 +5,23 @@ This section lists functions that have been written to aid with the
 production of fake data. They live in the ``fake_it.py`` module.
 
 
-**dither** *(ad_base, cycles=1, shape=(3,3), offset=10, rms=0, dither_overhead=5., add_objects=None, add_noise=True, seed=None)*
+**dither** *(ad_base, cycles=1, shape=(3,3), offset=10, rms=0, dither_overhead=5., add_objects=None, add_noise=True, seed=None, write=False)*
 
     This function returns a list of ``AstroFaker`` objects representing a sequence
     of images taken in one or more cycles of a standard gird-like dither pattern,
-    with the offset header keywords set appropriately. A function (the
+    with the offset header keywords set appropriately. The center of this dither
+    pattern is given by the ``ra`` and ``dec`` descriptor values from the reference
+    image. A function (the
     *add_objects* parameter) can be passed that produces a consistent artificial
     sky, and random offsetting errors can be introduced. The observation times of
     consecutive images are increased by the exposure time of each image plus an
     overhead (the *dither_overhead* parameter), ensuring that the ``associateSky``
     primitive will work as expected.
+
+    The images created by this function are given filenames with a suffix of
+    ``_cxy``, where ``c`` is the cycle number and ``x`` and ``y`` are the grid
+    positions along the two axes. All are 0-indexed, and the cycle number is
+    omitted if only one cycle is requested.
 
     ad_base
       An *AstroFaker* object used as a reference
@@ -52,6 +59,9 @@ production of fake data. They live in the ``fake_it.py`` module.
     seed
       An *int* (or ``None``) that is passed to ``numpy.random.seed()`` to seed
       the random number generator before creating the offsetting errors
+
+    write
+      A *boolean* indicating whether to write the individial files to disk.
 
 
 **make_star_function** *(ad_base, nstars=10, border=None, radius=None, fwhm=None, flux=1., seed=None)*

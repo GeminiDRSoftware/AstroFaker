@@ -82,7 +82,7 @@ def make_star_function(ad_base, nstars=10, border=0, radius=None,
                    flux_list=flux_list, fwhm_list=fwhm_list)
 
 def dither(ad_base, cycles=1, shape=(3,3), offset=10, rms=0, dither_overhead=5.,
-           add_objects=None, add_noise=True, seed=None):
+           add_objects=None, add_noise=True, seed=None, write=False):
     """
     This produces a series of AD objects mimicking one or more rectangular
     dither patterns on the sky. A function to position objects at the same
@@ -110,6 +110,8 @@ def dither(ad_base, cycles=1, shape=(3,3), offset=10, rms=0, dither_overhead=5.,
         Call add_read_noise() and add_poisson_noise() after creation?
     seed: int/None
         Random number seed, to ensure repeatability
+    write: bool
+        Write files to disk?
     """
     adinputs = []
     exptime = ad_base.exposure_time()
@@ -137,5 +139,6 @@ def dither(ad_base, cycles=1, shape=(3,3), offset=10, rms=0, dither_overhead=5.,
                     ad.add_poisson_noise()
                     ad.add_read_noise()
                 adinputs.append(ad)
-                ad.write(overwrite=True)
+                if write:
+                    ad.write(overwrite=True)
     return adinputs
