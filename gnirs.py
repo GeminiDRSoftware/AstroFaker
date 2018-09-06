@@ -38,4 +38,4 @@ class AstroFakerGnirs(AstroFaker, AstroDataGnirs):
         super(self.__class__, self).add_extension(data=data, shape=(1022, 1024),
                     pixel_scale=0.15, flip=False, extra_keywords=extra_keywords)
         for sec in ('array', 'data', 'detector'):
-            del self[-1].hdr['{}_section'.format(sec)]
+            del self[-1].hdr[self._keyword_for('{}_section'.format(sec))]

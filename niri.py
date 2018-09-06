@@ -53,4 +53,4 @@ class AstroFakerNiri(AstroFaker, AstroDataNiri):
                                 pixel_scale=pixel_scale, flip=flip,
                                 extra_keywords=extra_keywords)
         for sec in ('array', 'data', 'detector'):
-            del self[-1].hdr['{}_section'.format(sec)]
+            del self[-1].hdr[self._keyword_for('{}_section'.format(sec))]
