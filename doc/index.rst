@@ -13,4 +13,5 @@ AstroFaker Manual
    classes
    methods
    functions
+   test_examples
    ack
