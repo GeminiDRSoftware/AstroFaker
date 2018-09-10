@@ -1,4 +1,5 @@
 from future.utils import with_metaclass
+from __future__ import print_function
 from builtins import object
 import abc
 
@@ -90,7 +91,7 @@ def convert_rd2xy(fn):
                         slice = self[index]
                         break
                 else:
-                    print "Location not on any extensions"
+                    print("Location not on any extensions")
                     return
             del kwargs["ra"], kwargs["dec"]
             kwargs.update({"x": x, "y": y})
