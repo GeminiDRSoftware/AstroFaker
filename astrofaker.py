@@ -111,7 +111,7 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
         instance._descriptor_dict = {}
         return instance
 
-    def _setattr__(self, name, value):
+    def __setattr__(self, name, value):
         """
         Allow descriptor return values to be set directly, by overriding
         the method. This does not handle the descriptor arguments, which
