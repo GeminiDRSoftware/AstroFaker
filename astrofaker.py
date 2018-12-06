@@ -126,8 +126,12 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
                 return self._descriptor_dict[name]
             object.__setattr__(self, name, MethodType(fn, self, type(self)))
 
-        if hasattr(self, name):
+        # Avoid a recursion barf when instantiating the _dataprov
+        try:
             attr = getattr(self, name)
+        except:  # RecursionError in py3 if no _dataprov yet
+            pass
+        else:
             try:
                 if attr.descriptor_method:
                     self._descriptor_dict[name] = value
@@ -136,7 +140,7 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
             except AttributeError:
                 pass
         # Do the "normal" thing if it's not a descriptor
-        super(AstroFaker, self).__setattr__(name, value)
+        object.__setattr__(self, name, value)
 
     @staticmethod
     def create(header, mode='IMAGE', extra_keywords={},
