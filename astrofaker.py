@@ -140,7 +140,7 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
             except AttributeError:
                 pass
         # Do the "normal" thing if it's not a descriptor
-        object.__setattr__(self, name, value)
+        super(AstroFaker, self).__setattr__(name, value)
 
     @staticmethod
     def create(header, mode='IMAGE', extra_keywords={},

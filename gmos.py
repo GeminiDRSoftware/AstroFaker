@@ -57,6 +57,11 @@ class AstroFakerGmos(AstroFaker, AstroDataGmos):
             datx2 = datx1 + 512 // binning
             datasec = '[{}:{},1:{}]'.format(datx1+1, datx2, shape[0])
 
+            if overscan:
+                biasx1 = BIAS_WIDTH - datx1
+                biassec = '[{}:{},1:{}]'.format(biasx1+1, biasx1+BIAS_WIDTH, shape[0])
+                extra_keywords[self._keyword_for('overscan_section')] = biassec
+
             arrx1 = detx1 % 2048
             arrx2 = arrx1 + 512
             arraysec = '[{}:{},1:4224]'.format(arrx1, arrx2)
