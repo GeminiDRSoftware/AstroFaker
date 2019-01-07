@@ -5,10 +5,9 @@ from gemini_instruments.gmos.adclass import AstroDataGmos
 from gemini_instruments.gmos import lookup
 
 BIAS_WIDTH = 32
+# TODO: These are only good for Hamamatsu data
 CRPIX2N = (2136.9534, 2136.0563, 2135.6827)
 CRPIX2S = (2136.7972, 2137.6572, 2141.7487)
-
-# TODO: This will only fake Hamamatusu data.
 
 class AstroFakerGmos(AstroFaker, AstroDataGmos):
     def _add_required_phu_keywords(self, mode):
@@ -16,8 +15,17 @@ class AstroFakerGmos(AstroFaker, AstroDataGmos):
         north = self.instrument() == 'GMOS-N'
         self.phu['IAA'] = 179.901 if north else 359.9
         self.phu['DETTYPE'] = "S10892-N" if north else "S10892"
-        self.phu['DETID'] = ("BI13-20-4k-1,BI12-09-4k-2,BI13-18-4k-2" if north
-                             else "BI5-36-4k-2,BI11-33-4k-1,BI12-34-4k-1")
+        if 'EEV' in mode:
+            self.phu['DETID'] = ("EEV9273-16-03EEV9273-20-04EEV9273-20-03" if north
+                                 else "EEV2037-06-03EEV8194-19-04EEV8261-07-04")
+        elif 'e2v' in mode:
+            if north:
+                self.phu['DETID'] = "e2v 10031-23-05,10031-01-03,10031-18-04"
+            else:
+                raise ValueError("GMOS-S never had e2v CCDs!")
+        else:
+            self.phu['DETID'] = ("BI13-20-4k-1,BI12-09-4k-2,BI13-18-4k-2" if north
+                                 else "BI5-36-4k-2,BI11-33-4k-1,BI12-34-4k-1")
 
         if 'IMAGE' in mode:
             self.phu['GRATING'] = 'MIRROR'
@@ -30,7 +38,8 @@ class AstroFakerGmos(AstroFaker, AstroDataGmos):
             raise ValueError("Binning must be 1, 2, or 4")
 
         del self[:]
-        shape = (4224 // binning, 512 // binning + (BIAS_WIDTH if overscan else 0))
+        shape = ((4224 if self.phu['DETID'].startswith('BI') else 4608) // binning,
+                 512 // binning + (BIAS_WIDTH if overscan else 0))
         # If the overscan is present, assume it's raw data
         dtype = np.uint16 if overscan else np.float32
         pixel_scale = lookup.gmosPixelScales[self.instrument(),
