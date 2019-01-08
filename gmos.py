@@ -73,7 +73,7 @@ class AstroFakerGmos(AstroFaker, AstroDataGmos):
 
             arrx1 = detx1 % 2048
             arrx2 = arrx1 + 512
-            arraysec = '[{}:{},1:4224]'.format(arrx1, arrx2)
+            arraysec = '[{}:{},1:{}]'.format(arrx1+1, arrx2, shape[0])
 
             extra_keywords.update({self._keyword_for('detector_section'): detsec,
                               self._keyword_for('data_section'): datasec,
