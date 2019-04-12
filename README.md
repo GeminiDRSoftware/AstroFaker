@@ -1,16 +1,17 @@
-                 _        _             _____     _
-                / \   ___| |_ _ __ ___ |  ___|_ _| | _____ _ __
-               / _ \ / __| __| '__/ _ \| |_ / _` | |/ / _ \ '__|
-              / ___ \\__ \ |_| | | (_) |  _| (_| |   <  __/ |
-             /_/   \_\___/\__|_|  \___/|_|  \__,_|_|\_\___|_|
+# AstroFaker
 
-               Produce simulated astronomical data for DRAGONS
+Generate fake astronomical data to test DRAGONS.
 
-## Purpose
+## Description
 
-The AstroFaker module provides instrument-specific classes, derived from
+The astrofaker package provides instrument-specific classes, derived from
 the DRAGONS AstroData classes, that provide additional functionality to
 permit the creation of simulated astronomical data for code testing.
 
-The AstroFaker module should be imported instead of gemini_instruments to
-ensure that all AstroData objects have the additional methods.
+It should be imported instead of gemini_instruments to ensure that all AstroData 
+objects have the additional methods.
+
+## Note
+
+This project has been set up using PyScaffold 3.1. For details and usage
+information on PyScaffold see https://pyscaffold.org/.

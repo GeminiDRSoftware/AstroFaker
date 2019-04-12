@@ -2,4 +2,5 @@
 Contributors
 ============
 
-* Bruno Quint <b1quint@gmail.com>
+* Bruno Quint <bquint@gemini.edu>
+* Christopher Simpson <csimpson@gemini.edu>
