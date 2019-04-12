@@ -12,8 +12,8 @@ class AstroFakerGsaoi(AstroFaker, AstroDataGsaoi):
         # The WCS of GSAOI is a bit of a mess, with no consistent offsets
         # between the CRPIXi values and random pixel scales
         for i in range(4):
-            crpix1 = -500. if (i==0 or i==3) else 1650.
-            crpix2 = 3000. if i<2 else 850.
-            self.add_extension(shape=(2048,2048), pixel_scale=0.0195,
+            crpix1 = -500. if (i == 0 or i == 3) else 1650.
+            crpix2 = 3000. if i < 2 else 850.
+            self.add_extension(shape=(2048, 2048), pixel_scale=0.0195,
                                extra_keywords={'CRPIX1': crpix1,
                                                'CRPIX2': crpix2})

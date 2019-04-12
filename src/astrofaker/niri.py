@@ -3,6 +3,7 @@ from gemini_instruments.niri.adclass import AstroDataNiri
 
 PIXEL_SCALES = {6: 0.1171, 14: 0.499, 32: 0.0219}
 
+
 class AstroFakerNiri(AstroFaker, AstroDataNiri):
     def _add_required_phu_keywords(self, mode):
         self.phu['IAA'] = 270.56  # Value seen in recent headers
@@ -31,14 +32,15 @@ class AstroFakerNiri(AstroFaker, AstroDataNiri):
                 raise ValueError("AO observations require the bottom port")
         if roi_size not in (512, 768, 1024):
             raise ValueError("Invalid roi_size")
-        flip = (self.phu.get('INPORT')==1 and not self.is_ao())
-        self.add_extension(shape = (roi_size, roi_size),
+        flip = (self.phu.get('INPORT') == 1 and not self.is_ao())
+        self.add_extension(shape=(roi_size, roi_size),
                            pixel_scale=pixel_scale,
                            flip=flip)
 
     @noslice
-    def add_extension(self, data=None, shape=(1024,1024), pixel_scale=PIXEL_SCALES[6],
-                      flip=False, extra_keywords={}):
+    def add_extension(self, data=None, shape=(1024, 1024),
+                      pixel_scale=PIXEL_SCALES[6], flip=False,
+                      extra_keywords={}):
         """
         NIRI-specific method which provides NIRI-like defaults. Note that we
         don't check for valid NIRI data shapes because we may wish to create
@@ -47,10 +49,10 @@ class AstroFakerNiri(AstroFaker, AstroDataNiri):
         This extends the AstroFaker method to deal with the bizarre way NIRI
         describes its sections.
         """
-        extra_keywords.update({'LOWROW': 0, 'HIROW': shape[0]-1,
-                               'LOWCOL': 0, 'HICOL': shape[1]-1})
+        extra_keywords.update({'LOWROW': 0, 'HIROW': shape[0] - 1,
+                               'LOWCOL': 0, 'HICOL': shape[1] - 1})
         super(self.__class__, self).add_extension(data=data, shape=shape,
-                                pixel_scale=pixel_scale, flip=flip,
-                                extra_keywords=extra_keywords)
+                                                  pixel_scale=pixel_scale, flip=flip,
+                                                  extra_keywords=extra_keywords)
         for sec in ('array', 'data', 'detector'):
             del self[-1].hdr[self._keyword_for('{}_section'.format(sec))]

@@ -1,6 +1,7 @@
 from .astrofaker import AstroFaker, noslice
 from gemini_instruments.gnirs.adclass import AstroDataGnirs
 
+
 class AstroFakerGnirs(AstroFaker, AstroDataGnirs):
     def _add_required_phu_keywords(self, mode):
         self.phu['IAA'] = 89.747  # Value seen in recent headers
@@ -32,10 +33,17 @@ class AstroFakerGnirs(AstroFaker, AstroDataGnirs):
         describes its sections.
         """
         if data is not None and data.shape != (1022, 1024):
-           raise ValueError("Invalid GNIRS data shape {}".format(data.shape))
+            raise ValueError("Invalid GNIRS data shape {}".format(data.shape))
+
         extra_keywords.update({'LOWROW': 0, 'HIROW': 1023,
                                'LOWCOL': 0, 'HICOL': 1023})
-        super(self.__class__, self).add_extension(data=data, shape=(1022, 1024),
-                    pixel_scale=0.15, flip=False, extra_keywords=extra_keywords)
+
+        super(self.__class__, self).add_extension(
+            data=data,
+            shape=(1022, 1024),
+            pixel_scale=0.15,
+            flip=False,
+            extra_keywords=extra_keywords)
+
         for sec in ('array', 'data', 'detector'):
             del self[-1].hdr[self._keyword_for('{}_section'.format(sec))]

@@ -9,6 +9,7 @@ BIAS_WIDTH = 32
 CRPIX2N = (2136.9534, 2136.0563, 2135.6827)
 CRPIX2S = (2136.7972, 2137.6572, 2141.7487)
 
+
 class AstroFakerGmos(AstroFaker, AstroDataGmos):
     def _add_required_phu_keywords(self, mode):
         # Values seen in recent headers
@@ -60,27 +61,27 @@ class AstroFakerGmos(AstroFaker, AstroDataGmos):
 
             detx1 = i * 512
             detx2 = detx1 + 512
-            detsec = '[{}:{},1:4224]'.format(detx1+1, detx2)
+            detsec = '[{}:{},1:4224]'.format(detx1 + 1, detx2)
 
             datx1 = BIAS_WIDTH if (overscan and i % 2 == 1) else 0
             datx2 = datx1 + 512 // binning
-            datasec = '[{}:{},1:{}]'.format(datx1+1, datx2, shape[0])
+            datasec = '[{}:{},1:{}]'.format(datx1 + 1, datx2, shape[0])
 
             if overscan:
                 biasx1 = BIAS_WIDTH - datx1
-                biassec = '[{}:{},1:{}]'.format(biasx1+1, biasx1+BIAS_WIDTH, shape[0])
+                biassec = '[{}:{},1:{}]'.format(biasx1 + 1, biasx1 + BIAS_WIDTH, shape[0])
                 extra_keywords[self._keyword_for('overscan_section')] = biassec
 
             arrx1 = detx1 % 2048
             arrx2 = arrx1 + 512
-            arraysec = '[{}:{},1:{}]'.format(arrx1+1, arrx2, shape[0])
+            arraysec = '[{}:{},1:{}]'.format(arrx1 + 1, arrx2, shape[0])
 
             extra_keywords.update({self._keyword_for('detector_section'): detsec,
-                              self._keyword_for('data_section'): datasec,
-                              self._keyword_for('array_section'): arraysec,
-                              'CRPIX1': crpix1+datx1, 'CRPIX2': crpix2})
+                                   self._keyword_for('data_section'): datasec,
+                                   self._keyword_for('array_section'): arraysec,
+                                   'CRPIX1': crpix1 + datx1, 'CRPIX2': crpix2})
 
-            crpix1 -= (datx2-datx1)
+            crpix1 -= (datx2 - datx1)
             # This isn't entirely right but it'll do
             if i % 4 == 3:
                 crpix1 -= chip_gap / binning

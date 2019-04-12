@@ -4,6 +4,7 @@ from functools import partial
 from astropy.wcs import WCS
 from copy import deepcopy
 
+
 def make_star_function(ad_base, nstars=10, border=0, radius=None,
                        fwhm=None, flux=1., seed=None):
     """
@@ -37,6 +38,7 @@ def make_star_function(ad_base, nstars=10, border=0, radius=None,
     seed: int/None
         Random number seed, to ensure repeatability
     """
+
     def stars(ad, ra_list, dec_list, flux_list, fwhm_list):
         for ra, dec, flux, fwhm in zip(ra_list, dec_list, flux_list, fwhm_list):
             ad.add_star(ra=ra, dec=dec, flux=flux, fwhm=fwhm)
@@ -59,7 +61,7 @@ def make_star_function(ad_base, nstars=10, border=0, radius=None,
     for i, index in enumerate(np.random.randint(len(ad_base), size=nstars)):
         if radius is None:
             shape = ad_base[index].data.shape
-            stary, starx = [np.random.rand() * (len_axis-2*border) + border
+            stary, starx = [np.random.rand() * (len_axis - 2 * border) + border
                             for len_axis in shape]
             ra, dec = wcs[index].all_pix2world(starx, stary, 0)
         else:
@@ -67,10 +69,10 @@ def make_star_function(ad_base, nstars=10, border=0, radius=None,
             # in pixel space
             while True:
                 rx, ry = np.random.rand(2)
-                if rx*rx + ry*ry <= 1.0:
+                if rx * rx + ry * ry <= 1.0:
                     break
-            starx = xbase + rx * radius/pix_scale
-            stary = ybase + ry * radius/pix_scale
+            starx = xbase + rx * radius / pix_scale
+            stary = ybase + ry * radius / pix_scale
             ra, dec = wcs[0].all_pix2world(starx, stary, 0)
 
         ra_list.append(ra)
@@ -81,7 +83,8 @@ def make_star_function(ad_base, nstars=10, border=0, radius=None,
     return partial(stars, ra_list=ra_list, dec_list=dec_list,
                    flux_list=flux_list, fwhm_list=fwhm_list)
 
-def dither(ad_base, cycles=1, shape=(3,3), offset=10, rms=0, dither_overhead=5.,
+
+def dither(ad_base, cycles=1, shape=(3, 3), offset=10, rms=0, dither_overhead=5.,
            add_objects=None, add_noise=True, seed=None, write=False):
     """
     This produces a series of AD objects mimicking one or more rectangular
@@ -119,18 +122,18 @@ def dither(ad_base, cycles=1, shape=(3,3), offset=10, rms=0, dither_overhead=5.,
     np.random.seed(seed)
     for cycle in range(cycles):
         for iy in range(shape[1]):
-            yoff = (iy - 0.5 * (shape[1]-1)) * offset
+            yoff = (iy - 0.5 * (shape[1] - 1)) * offset
             for ix in range(shape[0]):
-                xoff = (ix - 0.5 * (shape[0]-1)) * offset
+                xoff = (ix - 0.5 * (shape[0] - 1)) * offset
                 ad = deepcopy(ad_base)
                 ad.time_offset(seconds=time_since_start)
                 time_since_start += exptime + dither_overhead
-                ad.update_filename(suffix="_{}{}{}".format(cycle if cycles>1 else '',
+                ad.update_filename(suffix="_{}{}{}".format(cycle if cycles > 1 else '',
                                                            ix, iy))
                 ad.phu['ORIGNAME'] = ad.filename
                 dx, dy = rms * np.random.randn(2)
                 # Place objects at the "true" locations
-                ad.sky_offset(xoff+dx, yoff+dy)
+                ad.sky_offset(xoff + dx, yoff + dy)
                 if add_objects is not None:
                     add_objects(ad)
                 # Reset the header offsets to the requested values

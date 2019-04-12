@@ -16,6 +16,7 @@ except DistributionNotFound:
 finally:
     del get_distribution, DistributionNotFound
 
+
 # Put in one place (i.e., here) all the stuff that the individual modules
 # in gemini_instruments do. It makes things a bit cleaner.
 
@@ -26,6 +27,7 @@ def add_instrument(instrument):
     module = import_module('.{}'.format(instrument), __name__)
     cls = getattr(module, 'AstroFaker{}'.format(instrument.capitalize()))
     factory.addClass(cls)
+
 
 add_instrument('f2')
 add_instrument('gmos')
