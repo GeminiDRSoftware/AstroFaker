@@ -124,7 +124,11 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
         def override_descriptor(name):
             def fn(self, *args, **kwargs):
                 return self._descriptor_dict[name]
-            object.__setattr__(self, name, MethodType(fn, self, type(self)))
+            # The first one is py2, the second py3
+            try:
+                object.__setattr__(self, name, MethodType(fn, self, type(self)))
+            except TypeError:
+                object.__setattr__(self, name, MethodType(fn, self))
 
         # Avoid a recursion barf when instantiating the _dataprov
         try:
