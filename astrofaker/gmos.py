@@ -1,6 +1,6 @@
 import numpy as np
 
-from .astrofaker import AstroFaker, noslice
+from astrofaker import AstroFaker, noslice
 from gemini_instruments.gmos.adclass import AstroDataGmos
 from gemini_instruments.gmos import lookup
 

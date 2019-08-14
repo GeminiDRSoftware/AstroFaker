@@ -1,4 +1,4 @@
-from .astrofaker import AstroFaker, noslice
+from astrofaker import AstroFaker, noslice
 from gemini_instruments.gsaoi.adclass import AstroDataGsaoi
 
 

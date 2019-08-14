@@ -1,4 +1,4 @@
-from .astrofaker import AstroFaker, noslice
+from astrofaker import AstroFaker, noslice
 from gemini_instruments.niri.adclass import AstroDataNiri
 
 PIXEL_SCALES = {6: 0.1171, 14: 0.499, 32: 0.0219}

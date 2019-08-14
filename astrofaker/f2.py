@@ -1,4 +1,4 @@
-from .astrofaker import AstroFaker, noslice
+from astrofaker import AstroFaker, noslice
 from gemini_instruments.f2.adclass import AstroDataF2
 
 class AstroFakerF2(AstroFaker, AstroDataF2):
