@@ -1,10 +1,14 @@
 #!/usr/bin/env python
 """
-Manages package version.
+AstroFaker Version Tracker:
+
+- v0.1
+    - Refactored package with setup.py and requirements.txt;
+
 """
 
 API = 0
-FEATURE = 2
+FEATURE = 1
 BUG = 0
 
 
