@@ -1,5 +1,11 @@
-from astrofaker import AstroFaker, noslice
+#!/usr/bin/env python
+"""
+(some docstring here)
+"""
+
 from gemini_instruments.gsaoi.adclass import AstroDataGsaoi
+
+from .astrofaker import AstroFaker, noslice
 
 
 class AstroFakerGsaoi(AstroFaker, AstroDataGsaoi):
@@ -8,12 +14,21 @@ class AstroFakerGsaoi(AstroFaker, AstroDataGsaoi):
 
     @noslice
     def init_default_extensions(self):
+
         del self[:]
+
         # The WCS of GSAOI is a bit of a mess, with no consistent offsets
         # between the CRPIXi values and random pixel scales
         for i in range(4):
-            crpix1 = -500. if (i==0 or i==3) else 1650.
-            crpix2 = 3000. if i<2 else 850.
-            self.add_extension(shape=(2048,2048), pixel_scale=0.0195,
-                               extra_keywords={'CRPIX1': crpix1,
-                                               'CRPIX2': crpix2})
+
+            crpix1 = -500. if (i == 0 or i == 3) else 1650.
+            crpix2 = 3000. if i < 2 else 850.
+
+            self.add_extension(
+                shape=(2048, 2048),
+                pixel_scale=0.0195,
+                extra_keywords={
+                    'CRPIX1': crpix1,
+                    'CRPIX2': crpix2
+                }
+            )
