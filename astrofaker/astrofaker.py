@@ -13,23 +13,29 @@ from astropy.io.fits import Header, PrimaryHDU
 from functools import wraps
 from types import MethodType
 
+
 def cosd(angle):
     return np.cos(np.radians(angle))
+
+
 def sind(angle):
     return np.sin(np.radians(angle))
 
+
 @models.custom_model
 def Sersic(x, y, amplitude=1.0, r_e=1.0, n=4.0):
-    m = 1.0/n
+    m = 1.0 / n
     # This approximation is from Ciotti & Bertin (1999; A&A, 352, 447)
-    b = 2.*n - 1./3. + 4.*m/405. + 46.*m**2/25515.
-    r = np.sqrt(x*x + y*y)
-    return amplitude * np.exp(-b*(r/r_e)**m)
+    b = 2. * n - 1. / 3. + 4. * m / 405. + 46. * m ** 2 / 25515.
+    r = np.sqrt(x * x + y * y)
+    return amplitude * np.exp(-b * (r / r_e) ** m)
+
 
 def sliceable(fn):
     """Used to decorate functions that can operate on full AD instances or
     slices. If a full AD is sent, then the function being decorated
     operated on each slice in turn."""
+
     @wraps(fn)
     def gn(self, *args, **kwargs):
         if self.is_single:
@@ -37,11 +43,14 @@ def sliceable(fn):
         else:
             ret_value = [fn(ext, *args, **kwargs) for ext in self]
         return ret_value
+
     return gn
+
 
 def sliceonly(fn):
     """Used to decorate functions that require only a single-extension
     slice to be passed. Otherwise a TypeError is raised."""
+
     @wraps(fn)
     def gn(self, *args, **kwargs):
         if self.is_single:
@@ -50,11 +59,14 @@ def sliceonly(fn):
             raise TypeError("Can only run {} on a single AD "
                             "slice".format(fn.__name__))
         return ret_value
+
     return gn
+
 
 def noslice(fn):
     """Used to decorate functions that require only a full AD instance
     to be passed. Otherwise a TypeError is raised."""
+
     @wraps(fn)
     def gn(self, *args, **kwargs):
         if not self.is_single:
@@ -63,7 +75,9 @@ def noslice(fn):
             raise TypeError("Can only run {} on an unsliced AD "
                             "instance".format(fn.__name__))
         return ret_value
+
     return gn
+
 
 def convert_rd2xy(fn):
     """Most methods take (x,y) pixel values as parameters. This descriptor
@@ -73,6 +87,7 @@ def convert_rd2xy(fn):
     coordinates lie will be passed to the decorated function.
 
     TODO: Cope with objects that cross extension boundaries"""
+
     @wraps(fn)
     def gn(self, *args, **kwargs):
         ra = kwargs.get("ra")
@@ -87,7 +102,7 @@ def convert_rd2xy(fn):
                     wcs = WCS(self[index].hdr)
                     x, y = wcs.all_world2pix(ra, dec, 0)
                     nypix, nxpix = self[index].data.shape
-                    if x>-0.5 and y>-0.5 and y<nypix-0.5 and x<nxpix-0.5:
+                    if x > -0.5 and y > -0.5 and y < nypix - 0.5 and x < nxpix - 0.5:
                         slice = self[index]
                         break
                 else:
@@ -99,7 +114,9 @@ def convert_rd2xy(fn):
         else:
             ret_value = fn(self, *args, **kwargs)  # unchanged
         return ret_value
+
     return gn
+
 
 ############################ ASTROFAKER CLASS ###############################
 class AstroFaker(with_metaclass(abc.ABCMeta, object)):
@@ -121,9 +138,11 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
         so that the descriptor method returns the desired value but sometimes
         that is difficult (e.g., NIRI filter_name) so this option is provided
         """
+
         def override_descriptor(name):
             def fn(self, *args, **kwargs):
                 return self._descriptor_dict[name]
+
             # The first one is py2, the second py3
             try:
                 object.__setattr__(self, name, MethodType(fn, self, type(self)))
@@ -278,11 +297,11 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
         # first extension and put the fiducial point in the middle.
         if len(self) == 1 and 'RA' in self.phu and 'DEC' in self.phu:
             self[-1].hdr.update({'CRVAL1': self.phu['RA'],
-                                    'CRVAL2': self.phu['DEC'],
-                                    'CTYPE1': 'RA---TAN',
-                                    'CTYPE2': 'DEC--TAN',
-                                    'CRPIX1': 0.5*(shape[-1]+1),
-                                    'CRPIX2': 0.5*(shape[-2]+1)})
+                                 'CRVAL2': self.phu['DEC'],
+                                 'CTYPE1': 'RA---TAN',
+                                 'CTYPE2': 'DEC--TAN',
+                                 'CRPIX1': 0.5 * (shape[-1] + 1),
+                                 'CRPIX2': 0.5 * (shape[-2] + 1)})
         if pixel_scale is None:
             pixel_scale = self.pixel_scale()
         pa = self.phu.get('PA', 0)
@@ -290,8 +309,8 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
             cd_matrix = models.Rotation2D(angle=pa)(
                 *np.array([[pixel_scale if flip else -pixel_scale, 0],
                            [0, pixel_scale]]) / 3600.0)
-            self[-1].hdr.update({'CD{}_{}'.format(i+1, j+1): cd_matrix[i][j]
-                                    for i in (0,1) for j in (0,1)})
+            self[-1].hdr.update({'CD{}_{}'.format(i + 1, j + 1): cd_matrix[i][j]
+                                 for i in (0, 1) for j in (0, 1)})
         self[-1].hdr.update(extra_keywords)
 
     @abc.abstractmethod
@@ -336,7 +355,7 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
         # Return XOFFSET, YOFFSET given RA, dec offsets
         pa = self.phu.get('PA', 0)
         iaa = self.phu.get('IAA', 0)
-        dx, dy = models.Rotation2D(angle=pa-iaa)(ra_offset, dec_offset)
+        dx, dy = models.Rotation2D(angle=pa - iaa)(ra_offset, dec_offset)
         return (-dx, -dy)
 
     def _pqmapping(self, ra_offset, dec_offset):
@@ -376,8 +395,8 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
         """
         for ext in self:
             cd_matrix = models.Rotation2D(angle)(*WCS(ext.hdr).wcs.cd)
-            ext.hdr.update({'CD{}_{}'.format(i+1, j+1): cd_matrix[i][j]
-                             for i in (0, 1) for j in (0, 1)})
+            ext.hdr.update({'CD{}_{}'.format(i + 1, j + 1): cd_matrix[i][j]
+                            for i in (0, 1) for j in (0, 1)})
         self.phu['PA'] = (self.phu.get('PA', 0) + angle) % 360
 
     ######################### PIXEL FAKING METHODS ##########################
@@ -406,7 +425,7 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
         scale: float
             Factor by which to scale the calculated noise
         """
-        noise = (scale * np.sqrt(np.where(self.data>0, self.data, 0)) *
+        noise = (scale * np.sqrt(np.where(self.data > 0, self.data, 0)) *
                  np.random.randn(*self.data.shape))
         if self.hdr.get('BUNIT', 'ADU').upper() == 'ADU':
             noise /= np.sqrt(self.gain())
@@ -424,7 +443,7 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
             Factor by which to scale the calculated noise
         """
         noise = scale * self.read_noise() * np.random.randn(*self.data.shape)
-        if self.hdr.get('BUNIT','ADU').upper() == 'ADU':
+        if self.hdr.get('BUNIT', 'ADU').upper() == 'ADU':
             noise /= self.gain()
         self.add(noise)
 
@@ -496,9 +515,9 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
             (Decorated by @convert_rd2xy so ra, dec can be specified)
         """
         obj = ((models.Shift(-x) & models.Shift(-y)) |
-                models.Rotation2D(self.phu.get('PA', 0)-pa) |
+               models.Rotation2D(self.phu.get('PA', 0) - pa) |
                (models.Scale(axis_ratio) & models.Identity(1)) |
-               Sersic(amplitude=amplitude, r_e=r_e/self.pixel_scale(), n=n))
+               Sersic(amplitude=amplitude, r_e=r_e / self.pixel_scale(), n=n))
         ygrid, xgrid = np.mgrid[:self.data.shape[-2], :self.data.shape[-1]]
         obj_data = obj(xgrid, ygrid)
         sigma = 0.42466 * self.seeing / self.pixel_scale()
