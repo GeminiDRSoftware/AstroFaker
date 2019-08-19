@@ -61,13 +61,13 @@ def test_can_update_descriptor_dispersion_axis_of_astrodata_extensions():
     ad.add_extension(hdu, pixel_scale=1.0)
 
     # ToDo: how are descriptor assignments handled?
-    # I suspect they should be something like Python Properties. This would
-    # allow some variable validation with a comprehensive error message.
+    # Same as before.
     for ext in ad:
         ext.dispersion_axis = 1
 
+    # ToDo: setting descriptors should be persistent and/or raise an error
     for ext in ad:
-        assert ext.dispersion_axis == 1
+        assert ext.dispersion_axis() == 1
 
 
 if __name__ == '__main__':
