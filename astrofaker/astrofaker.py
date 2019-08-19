@@ -223,6 +223,7 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
         ad.filename = filename
         return ad
 
+    ### STUFF TO HANDLE MANUAL SETTING OF TAGS ###
     @property
     def tags(self):
         """Return the tags of this object"""
@@ -247,6 +248,17 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
             del self._tags
         except AttributeError:
             pass
+
+    def __getitem__(self, slicing):
+        """
+        Override the standard AD slicing to propagate the _tags attribute
+        """
+        sliced = self.__class__(self._dataprov[slicing])
+        try:
+            sliced._tags = self._tags
+        except AttributeError:
+            pass
+        return sliced
 
     @staticmethod
     def open(source):
