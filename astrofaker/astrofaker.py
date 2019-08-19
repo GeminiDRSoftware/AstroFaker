@@ -223,6 +223,31 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
         ad.filename = filename
         return ad
 
+    @property
+    def tags(self):
+        """Return the tags of this object"""
+        try:
+            return self._tags
+        except AttributeError:
+            return super(AstroFaker, self).tags
+
+    @tags.setter
+    def tags(self, value):
+        """
+        Set the tags. No checking is performed as to whether the set of
+        tags makes sense (e.g., both "IMAGE" and "SPECT" can be set).
+        """
+        self._tags = set(value)
+
+    def revert_tags(self):
+        """
+        Return the tags attribute to its normal behavior.
+        """
+        try:
+            del self._tags
+        except AttributeError:
+            pass
+
     @staticmethod
     def open(source):
         return astrodata.open(source)
