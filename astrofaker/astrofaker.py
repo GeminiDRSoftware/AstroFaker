@@ -327,6 +327,7 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
                              self._keyword_for('data_section'): shape_value,
                              self._keyword_for('detector_section'): shape_value,
                              self._keyword_for('array_section'): shape_value})
+        self[-1].hdr.update(extra_keywords)
 
         # For instruments with multiple extensions, the relationship between
         # the WCS keywords on the extenstions has to be handled at the
@@ -348,7 +349,6 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
                            [0, pixel_scale]]) / 3600.0)
             self[-1].hdr.update({'CD{}_{}'.format(i + 1, j + 1): cd_matrix[i][j]
                                  for i in (0, 1) for j in (0, 1)})
-        self[-1].hdr.update(extra_keywords)
 
     @abc.abstractmethod
     def init_default_extensions(self):
