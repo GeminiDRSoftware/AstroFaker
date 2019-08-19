@@ -4,6 +4,7 @@ from astrodata import factory
 from gemini_instruments.gemini import addInstrumentFilterWavelengths
 
 from .astrofaker import AstroFaker
+from .niri import AstroFakerNiri
 from ._version import version
 
 
