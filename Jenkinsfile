@@ -45,7 +45,7 @@
 
         stage('Prepare') {
             steps {
-                echo "Hello World"
+                echo "$CONDA_ENV_NAME"
             }
         }
 
