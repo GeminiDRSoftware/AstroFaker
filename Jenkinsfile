@@ -45,8 +45,19 @@
 
         stage('Prepare') {
             steps {
-                condaCreateEnv "$CONDA_ENV_NAME"
+                echo "$CONDA_ENV_NAME"
             }
+        }
+
+    }
+
+    post {
+
+        success {
+            sendNotifications 'SUCCESSFUL'
+        }
+        failure {
+            sendNotifications 'FAILED'
         }
 
     }
