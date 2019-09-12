@@ -38,13 +38,14 @@
     environment {
         PATH = "$JENKINS_HOME/anaconda3/bin:$PATH"
         CONDA_ENV_NAME="astrofaker"
+        CONDA_ENV_FILE="conda_env.yml"
     }
 
     stages {
 
         stage('Prepare') {
             steps {
-                condaCreateEnv $CONDA_ENV_NAME
+                condaCreateEnv "$CONDA_ENV_NAME"
             }
         }
 
