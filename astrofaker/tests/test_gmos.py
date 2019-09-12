@@ -50,6 +50,9 @@ def test_can_update_descriptor_dispersion_axis_of_astrodata():
     ad.dispersion_axis = [1]
     assert ad.dispersion_axis() == [1]
 
+    for ext in ad:
+        assert ext.dispersion_axis() == 1
+
 
 def test_can_update_descriptor_dispersion_axis_of_astrodata_extensions():
 

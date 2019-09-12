@@ -1,1 +1,9 @@
+# PyCharm
 .idea
+
+# MacOs
+.DS_Store
+
+# PyTest
+**/.pytest_cache
+**/__pycache__
