@@ -45,7 +45,7 @@
 
         stage('Prepare') {
             steps {
-                echo "$CONDA_ENV_NAME"
+                condaCreateEnv "$CONDA_ENV_NAME"
             }
         }
 
