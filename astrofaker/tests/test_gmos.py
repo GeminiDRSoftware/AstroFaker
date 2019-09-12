@@ -21,6 +21,15 @@ def test_can_create_dataset():
     assert len(ad) == 0
 
 
+def test_can_initialize_default_extensions():
+
+    ad = astrofaker.create('GMOS-S')
+    ad.init_default_extensions()
+
+    assert len(ad) == 12
+    assert ad.binning() in [1, 2, 4]
+
+
 def test_can_add_image_extension():
 
     hdu = fits.ImageHDU()
