@@ -27,7 +27,7 @@ def test_can_initialize_default_extensions():
     ad.init_default_extensions()
 
     assert len(ad) == 12
-    assert ad.binning() in [1, 2, 4]
+    assert ad.detector_x_bin() in [1, 2, 4]
 
 
 def test_can_add_image_extension():
