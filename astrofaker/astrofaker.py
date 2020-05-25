@@ -253,7 +253,7 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
         """
         Override the standard AD slicing to propagate the _tags attribute
         """
-        sliced = self.__class__(self._dataprov[slicing])
+        sliced = super().__getitem__(slicing)
         try:
             sliced._tags = self._tags
         except AttributeError:
@@ -359,7 +359,7 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
     def sky_offset(self, ra_offset, dec_offset):
         """
         Update header keywords to simulate a shift in telescope pointing.
-        
+
         Parameters
         ----------
         ra_offset: float
@@ -408,7 +408,7 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
         the DATE-OBS keyword, which is the first place the descriptor looks. So
         even if that's not how the ut_datetime is normally determined, the
         descriptor will return the desired value.
-        
+
         Parameters
         ----------
         seconds/minutes: float
@@ -441,7 +441,7 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
     def zero_data(self, shape=None):
         """
         Reset all pixel values to zero, and delete mask and variance
-        
+
         Parameters
         ----------
         shape: tuple/None
@@ -456,7 +456,7 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
         """
         Add Poisson-like noise (Normal distribution is used) to pixel data.
         This does not affect the .variance plane.
-        
+
         Parameters
         ----------
         scale: float
@@ -473,7 +473,7 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
         """
         Add read noise (Normal distribution is used) to pixel data. This
         does not affect the .variance plane.
-                
+
         Parameters
         ----------
         scale: float
@@ -488,7 +488,7 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
     def add_object(self, obj):
         """
         Add an object to a particular extension's .data plane.
-        
+
         Parameters
         ----------
         obj: function/Model
@@ -504,7 +504,7 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
         """
         Add a star (Gaussian2D object) at the specified location.
         Decorated by convert_rd2xy so (ra,dec) can be given.
-        
+
         Parameters
         ----------
         amplitude: float/None
@@ -534,7 +534,7 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
         """
         Adds a Sersic profile galaxy, convolved with the seeing, at the
         specified location.
-        
+
         Parameters
         ----------
         amplitude: float
