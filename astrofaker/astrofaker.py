@@ -206,6 +206,7 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
 
             # Add some generic stuff to ensure basic functionality
             phu.header.update({'TELESCOP': telescope, 'OBSERVAT': telescope,
+                               'OBJECT': 'Gallifrey',
                                'RA': 180., 'DEC': 0., 'PA': 0.,
                                'RAOFFSET': 0., 'DECOFFSE': 0.,
                                'XOFFSET': 0., 'YOFFSET': 0.,
