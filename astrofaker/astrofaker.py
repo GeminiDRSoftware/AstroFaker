@@ -273,6 +273,16 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
         """
         pass
 
+    def create_gwcs(self):
+        """
+        Create a gWCS object for each extension from the header.
+        AstroData creates gWCS objects from FITS headers when the AD is
+        created. Since AstroFaker FITS headers are created *after* the
+        object, there needs to be a method to construct the gWCS objects.
+        """
+        for ext in self:
+            ext.wcs = astrodata.wcs.fitswcs_to_gwcs(ext.hdr)
+
     ########################## SEEING DEFINITION ############################
     @property
     def seeing(self):
