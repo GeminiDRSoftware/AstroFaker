@@ -4,6 +4,8 @@ from builtins import object
 import abc
 
 import astrodata
+from astrodata import wcs as adwcs
+
 import numpy as np
 from scipy.ndimage.filters import gaussian_filter
 import datetime
@@ -360,6 +362,7 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
                            [0, pixel_scale]]) / 3600.0)
             self[-1].hdr.update({'CD{}_{}'.format(i + 1, j + 1): cd_matrix[i][j]
                                  for i in (0, 1) for j in (0, 1)})
+        self[-1].wcs = adwcs.fitswcs_to_gwcs(self[-1].hdr)
 
     @abc.abstractmethod
     def init_default_extensions(self):
@@ -395,6 +398,7 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
         for ext in self:
             ext.hdr['CRVAL1'] += ra_offset / (3600. * cosd(self.dec()))
             ext.hdr['CRVAL2'] += dec_offset / 3600.
+            ext.wcs = adwcs.fitswcs_to_gwcs(ext.hdr)
 
     # These supporting methods can be overridden by instrument classes.
     # TBH, I'm not sufficiently up to speed on all the coordinate systems
@@ -445,6 +449,7 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
             cd_matrix = models.Rotation2D(angle)(*WCS(ext.hdr).wcs.cd)
             ext.hdr.update({'CD{}_{}'.format(i + 1, j + 1): cd_matrix[i][j]
                             for i in (0, 1) for j in (0, 1)})
+            ext.wcs = adwcs.fitswcs_to_gwcs(ext.hdr)
         self.phu['PA'] = (self.phu.get('PA', 0) + angle) % 360
 
     ######################### PIXEL FAKING METHODS ##########################
