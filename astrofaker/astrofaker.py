@@ -346,7 +346,7 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
         # the WCS keywords on the extenstions has to be handled at the
         # instrument level. Here we just deal with the case of creating the
         # first extension and put the fiducial point in the middle.
-        if len(self) == 1 and 'RA' in self.phu and 'DEC' in self.phu:
+        if len(self) == 1 and 'IMAGE' in self.tags and 'RA' in self.phu and 'DEC' in self.phu:
             self[-1].hdr.update({'CRVAL1': self.phu['RA'],
                                  'CRVAL2': self.phu['DEC'],
                                  'CTYPE1': 'RA---TAN',
@@ -356,7 +356,7 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
         if pixel_scale is None:
             pixel_scale = self.pixel_scale()
         pa = self.phu.get('PA', 0)
-        if pixel_scale is not None:
+        if pixel_scale is not None and 'IMAGE' in self.tags:
             cd_matrix = models.Rotation2D(angle=pa)(
                 *np.array([[pixel_scale if flip else -pixel_scale, 0],
                            [0, pixel_scale]]) / 3600.0)
