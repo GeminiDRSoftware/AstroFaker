@@ -334,7 +334,8 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
             self.append(data)
             shape = data.shape
         extver = len(self)
-        shape_value = '['+','.join(['1:{}'] * len(shape))+']'.format(*shape[::-1])
+        shape_fmt_str = '['+','.join(['1:{}'] * len(shape))+']'
+        shape_value = shape_fmt_str.format(*shape[::-1])
         self[-1].hdr.update({'EXTNAME': 'SCI',
                              'EXTVER': extver,
                              self._keyword_for('data_section'): shape_value,
