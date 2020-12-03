@@ -15,7 +15,6 @@ def test_can_create_dataset():
     ad = astrofaker.create('GMOS-S')
 
     assert isinstance(ad, astrodata.AstroData)
-    assert isinstance(ad, astrodata.AstroDataFits)
     assert isinstance(ad, astrofaker.AstroFaker)
     assert isinstance(ad, gmos.AstroFakerGmos)
     assert len(ad) == 0
