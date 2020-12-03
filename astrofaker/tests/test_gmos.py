@@ -81,5 +81,16 @@ def test_can_update_descriptor_dispersion_axis_of_astrodata_extensions():
         assert ext.dispersion_axis() == 1
 
 
+def test_override_descriptor():
+    ad = astrofaker.create('GMOS-S')
+    assert ad.wcs_ra() is None
+
+    ad.wcs_ra = 5
+    assert ad.wcs_ra() == 5
+
+    ad.wcs_ra = lambda: 5
+    assert ad.wcs_ra() == 5
+
+
 if __name__ == '__main__':
     pytest.main()

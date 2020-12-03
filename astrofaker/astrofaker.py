@@ -143,7 +143,13 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
 
         def override_descriptor(name):
             def fn(self, *args, **kwargs):
-                return self._descriptor_dict[name]
+                value = self._descriptor_dict[name]
+                if callable(value):
+                    return value()
+                else:
+                    return value
+
+            fn.descriptor_method = True
 
             # The first one is py2, the second py3
             try:
