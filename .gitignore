@@ -7,3 +7,6 @@
 # PyTest
 **/.pytest_cache
 **/__pycache__
+
+# Setup
+*.egg-info
