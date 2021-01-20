@@ -549,6 +549,56 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
                                 x_stddev=sigma, y_stddev=sigma)
         self.add_object(obj)
 
+    @sliceonly
+    def add_stars(self, amplitude=None, flux=None, fwhm=None, x=0, y=0,
+                  n_models=1):
+        """
+        Add multiple stars (Gaussian2D) at the specified locations. Same as
+        add_star but using model set for better performance.
+
+        Parameters
+        ----------
+        amplitude: float or list of float, optional
+            Peak pixel value
+        flux: float or list of float, optional
+            Total counts in object (only used if amplitude=None)
+        fwhm: float or list of float, optional
+            FWHM in arcseconds (if None, use seeing attribute)
+        x, y: float or list of float, optional
+            Location of centre of star in pixels [0-indexed]
+        n_models : int
+            The number of stars.
+
+        """
+        sigma = 0.42466 * (fwhm or self.seeing) / self.pixel_scale()
+        if amplitude is None:
+            if flux is None:
+                raise ValueError("Need to specify amplitude or flux")
+            else:
+                amplitude = flux / (2 * np.pi * sigma * sigma)
+
+        def _ensure_list(param):
+            if isinstance(param, list):
+                return param
+            elif isinstance(param, np.ndarray):
+                return list(param)
+            else:
+                return [param] * n_models
+
+        x = _ensure_list(x)
+        y = _ensure_list(y)
+        sigma = _ensure_list(sigma)
+        amplitude = _ensure_list(amplitude)
+        theta = [0] * n_models
+
+        obj = models.Gaussian2D(amplitude=amplitude, x_mean=x, y_mean=y,
+                                x_stddev=sigma, y_stddev=sigma, theta=theta,
+                                n_models=n_models)
+
+        ygrid, xgrid = np.mgrid[:self.data.shape[-2], :self.data.shape[-1]]
+        obj_data = obj(xgrid, ygrid, model_set_axis=False)
+        self.add(obj_data.sum(axis=0))
+
     @convert_rd2xy
     @sliceonly
     def add_galaxy(self, amplitude=None, n=4.0, r_e=1.0, axis_ratio=1.0,
