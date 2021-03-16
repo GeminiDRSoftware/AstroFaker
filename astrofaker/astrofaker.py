@@ -476,9 +476,11 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
         self.reset(data=np.zeros(shape), mask=None, variance=None)
 
     def add(self, other):
-        unit = (u.adu if self.hdr.get('BUNIT', 'ADU').upper() == 'ADU'
-                else u.electron)
-        super().add(other << unit)
+        if self.nddata.unit is not None:
+            # Use the same unit as self if it is set
+            super().add(other << self.nddata.unit)
+        else:
+            super().add(other)
 
     @sliceable
     def add_poisson_noise(self, scale=1.0):
