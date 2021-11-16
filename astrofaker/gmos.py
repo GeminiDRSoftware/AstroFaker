@@ -4,6 +4,7 @@
 """
 
 import numpy as np
+from itertools import product as cart_product
 
 from gemini_instruments.gmos.adclass import AstroDataGmos
 from gemini_instruments.gmos import lookup
@@ -25,20 +26,25 @@ class AstroFakerGmos(AstroFaker, AstroDataGmos):
         if 'EEV' in mode:
             self.phu['DETID'] = ("EEV9273-16-03EEV9273-20-04EEV9273-20-03" if north
                                  else "EEV2037-06-03EEV8194-19-04EEV8261-07-04")
+            utdate = "2006-01-01"
         elif 'e2v' in mode:
             if north:
                 self.phu['DETID'] = "e2v 10031-23-05,10031-01-03,10031-18-04"
+                utdate = "2015-01-01"
             else:
                 raise ValueError("GMOS-S never had e2v CCDs!")
         else:
             self.phu['DETID'] = ("BI13-20-4k-1,BI12-09-4k-2,BI13-18-4k-2" if north
                                  else "BI5-36-4k-2,BI11-33-4k-1,BI12-34-4k-1")
+            utdate = "2018-01-01"
+        self.phu['DATE-OBS'] = f"{utdate}T00:00:00.000"
 
         if 'IMAGE' in mode:
             self.phu['GRATING'] = 'MIRROR'
 
     @noslice
-    def init_default_extensions(self, num_ext=12, binning=1, overscan=True):
+    def init_default_extensions(self, num_ext=12, binning=1, overscan=True,
+                                read_speed="slow", gain_setting="low"):
         if num_ext != 12:
             raise NotImplementedError("Only tested for full array ROI")
         if binning not in (1, 2, 4):
@@ -94,3 +100,21 @@ class AstroFakerGmos(AstroFaker, AstroDataGmos):
 
             self.add_extension(shape=shape, pixel_scale=pixel_scale,
                                dtype=dtype, extra_keywords=extra_keywords)
+
+        # GAIN and READNOISE
+        # not the correct values, but makes the descriptors work
+        self.phu['AMPINTEG'] = 10000 if read_speed == "slow" else 1000
+        self.hdr['GAIN'] = 1 if gain_setting == "low" else 5
+        ccdnames = self.phu['DETID'].split(",")
+        if len(ccdnames) > 1:
+            if ccdnames[0].startswith("e2v"):
+                ccdnames[1] = "e2v " + ccdnames[1]
+                ccdnames[2] = "e2v " + ccdnames[2]
+        else:
+            ccdnames = ["EEV"+x for x in self.phu['DETID'].split("EEV")]
+        if num_ext == 12:
+            amps = ("1", "2", "3", "4")
+        else:
+            amps = ("left", "right")
+        for i, (ccd, amp) in enumerate(cart_product(ccdnames, amps)):
+            self[i].hdr['AMPNAME'] = f"{ccd}, {amp}"
