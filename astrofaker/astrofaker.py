@@ -9,6 +9,7 @@ from astrodata import wcs as adwcs
 import numpy as np
 from scipy.ndimage.filters import gaussian_filter
 import datetime
+import astropy.units as u
 from astropy.modeling import models
 from astropy.wcs import WCS
 from astropy.io.fits import Header, PrimaryHDU
@@ -143,7 +144,13 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
 
         def override_descriptor(name):
             def fn(self, *args, **kwargs):
-                return self._descriptor_dict[name]
+                value = self._descriptor_dict[name]
+                if callable(value):
+                    return value()
+                else:
+                    return value
+
+            fn.descriptor_method = True
 
             # The first one is py2, the second py3
             try:
@@ -338,6 +345,7 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
         shape_value = shape_fmt_str.format(*shape[::-1])
         self[-1].hdr.update({'EXTNAME': 'SCI',
                              'EXTVER': extver,
+                             'BUNIT': 'adu',
                              self._keyword_for('data_section'): shape_value,
                              self._keyword_for('detector_section'): shape_value,
                              self._keyword_for('array_section'): shape_value})
@@ -468,6 +476,13 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
             shape = self.data.shape
         self.reset(data=np.zeros(shape), mask=None, variance=None)
 
+    def add(self, other):
+        if self.nddata.unit is not None:
+            # Use the same unit as self if it is set
+            super().add(other << self.nddata.unit)
+        else:
+            super().add(other)
+
     @sliceable
     def add_poisson_noise(self, scale=1.0):
         """
@@ -543,6 +558,56 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
         obj = models.Gaussian2D(amplitude=amplitude, x_mean=x, y_mean=y,
                                 x_stddev=sigma, y_stddev=sigma)
         self.add_object(obj)
+
+    @sliceonly
+    def add_stars(self, amplitude=None, flux=None, fwhm=None, x=0, y=0,
+                  n_models=1):
+        """
+        Add multiple stars (Gaussian2D) at the specified locations. Same as
+        add_star but using model set for better performance.
+
+        Parameters
+        ----------
+        amplitude: float or list of float, optional
+            Peak pixel value
+        flux: float or list of float, optional
+            Total counts in object (only used if amplitude=None)
+        fwhm: float or list of float, optional
+            FWHM in arcseconds (if None, use seeing attribute)
+        x, y: float or list of float, optional
+            Location of centre of star in pixels [0-indexed]
+        n_models : int
+            The number of stars.
+
+        """
+        sigma = 0.42466 * (fwhm or self.seeing) / self.pixel_scale()
+        if amplitude is None:
+            if flux is None:
+                raise ValueError("Need to specify amplitude or flux")
+            else:
+                amplitude = flux / (2 * np.pi * sigma * sigma)
+
+        def _ensure_list(param):
+            if isinstance(param, list):
+                return param
+            elif isinstance(param, np.ndarray):
+                return list(param)
+            else:
+                return [param] * n_models
+
+        x = _ensure_list(x)
+        y = _ensure_list(y)
+        sigma = _ensure_list(sigma)
+        amplitude = _ensure_list(amplitude)
+        theta = [0] * n_models
+
+        obj = models.Gaussian2D(amplitude=amplitude, x_mean=x, y_mean=y,
+                                x_stddev=sigma, y_stddev=sigma, theta=theta,
+                                n_models=n_models)
+
+        ygrid, xgrid = np.mgrid[:self.data.shape[-2], :self.data.shape[-1]]
+        obj_data = obj(xgrid, ygrid, model_set_axis=False)
+        self.add(obj_data.sum(axis=0))
 
     @convert_rd2xy
     @sliceonly

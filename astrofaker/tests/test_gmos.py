@@ -15,7 +15,6 @@ def test_can_create_dataset():
     ad = astrofaker.create('GMOS-S')
 
     assert isinstance(ad, astrodata.AstroData)
-    assert isinstance(ad, astrodata.AstroDataFits)
     assert isinstance(ad, astrofaker.AstroFaker)
     assert isinstance(ad, gmos.AstroFakerGmos)
     assert len(ad) == 0
@@ -80,6 +79,17 @@ def test_can_update_descriptor_dispersion_axis_of_astrodata_extensions():
     # ToDo: setting descriptors should be persistent and/or raise an error
     for ext in ad:
         assert ext.dispersion_axis() == 1
+
+
+def test_override_descriptor():
+    ad = astrofaker.create('GMOS-S')
+    assert ad.wcs_ra() is None
+
+    ad.wcs_ra = 5
+    assert ad.wcs_ra() == 5
+
+    ad.wcs_ra = lambda: 5
+    assert ad.wcs_ra() == 5
 
 
 if __name__ == '__main__':
