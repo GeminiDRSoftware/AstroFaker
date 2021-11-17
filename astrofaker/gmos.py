@@ -31,11 +31,13 @@ class AstroFakerGmos(AstroFaker, AstroDataGmos):
             if north:
                 self.phu['DETID'] = "e2v 10031-23-05,10031-01-03,10031-18-04"
                 utdate = "2015-01-01"
+                self.phu['DETECTOR'] = "GMOS + e2v DD CCD42-90"
             else:
                 raise ValueError("GMOS-S never had e2v CCDs!")
         else:
             self.phu['DETID'] = ("BI13-20-4k-1,BI12-09-4k-2,BI13-18-4k-2" if north
                                  else "BI5-36-4k-2,BI11-33-4k-1,BI12-34-4k-1")
+            self.phu['DETECTOR'] = "GMOS{} + Hamamatsu".format("-N" if north else "")
             utdate = "2018-01-01"
         self.phu['DATE-OBS'] = f"{utdate}T00:00:00.000"
 
@@ -111,7 +113,7 @@ class AstroFakerGmos(AstroFaker, AstroDataGmos):
                 ccdnames[1] = "e2v " + ccdnames[1]
                 ccdnames[2] = "e2v " + ccdnames[2]
         else:
-            ccdnames = ["EEV"+x for x in self.phu['DETID'].split("EEV")]
+            ccdnames = ["EEV"+x for x in self.phu['DETID'].split("EEV")[1:]]
         if num_ext == 12:
             amps = ("1", "2", "3", "4")
         else:
