@@ -69,6 +69,7 @@ class AstroFakerGmos(AstroFaker, AstroDataGmos):
         extra_keywords = {'CRVAL1': self.phu['RA'], 'CRVAL2': self.phu['DEC'],
                           'CTYPE1': 'RA---TAN', 'CTYPE2': 'DEC--TAN',
                           'CCDSUM': '{} {}'.format(binning, binning)}
+        self.phu['NAMPS'] = num_ext
         for i in range(num_ext):
             ccd = i // 4
             crpix2 = (crpix2_list[ccd] - 0.5) / binning + 0.5
