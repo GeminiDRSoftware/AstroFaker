@@ -15,6 +15,12 @@ class AstroFakerNiri(AstroFaker, AstroDataNiri):
 
     def _add_required_phu_keywords(self, mode):
         self.phu['IAA'] = 270.56  # Value seen in recent headers
+        if 'deepwell' in mode:
+            self.phu['A_VDDUC'] = -3.48
+            self.phu['A_VDET'] = -2.61
+        else:  # shallow is default
+            self.phu['A_VDDUC'] = -3.49
+            self.phu['A_VDET'] = -2.89
 
     @noslice
     def init_default_extensions(self, fratio=6, roi_size=1024):
