@@ -142,6 +142,11 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
         that is difficult (e.g., NIRI filter_name) so this option is provided
         """
 
+        # Intercept some fields early to avoid recursion during the initial bootstrap
+        if name.startswith('_') or name in ['is_single', ]:
+            super(AstroFaker, self).__setattr__(name, value)
+            return
+
         def override_descriptor(name):
             def fn(self, *args, **kwargs):
                 value = self._descriptor_dict[name]
