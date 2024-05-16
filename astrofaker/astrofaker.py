@@ -7,7 +7,7 @@ import astrodata
 from astrodata import wcs as adwcs
 
 import numpy as np
-from scipy.ndimage.filters import gaussian_filter
+from scipy.ndimage import gaussian_filter
 import datetime
 import astropy.units as u
 from astropy.modeling import models
