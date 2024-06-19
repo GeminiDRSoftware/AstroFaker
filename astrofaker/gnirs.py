@@ -21,6 +21,8 @@ class AstroFakerGnirs(AstroFaker, AstroDataGnirs):
         else:
             raise ValueError('GNIRS mode must include IMAGE, SPECT, or DARK')
 
+        self.phu['ARRAYID'] = 'SN7638228.1.2'
+
     @noslice
     def init_default_extensions(self):
         del self[:]
