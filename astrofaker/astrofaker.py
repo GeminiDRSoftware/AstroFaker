@@ -479,8 +479,7 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
         """
         if shape is None:
             shape = self.data.shape
-        dtype = self.data.dtype
-        self.reset(data=np.zeros(shape, dtype=dtype), mask=None, variance=None)
+        self.reset(data=np.zeros(shape), mask=None, variance=None)
 
     @sliceable
     def add_poisson_noise(self, scale=1.0):
@@ -510,8 +509,7 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
         scale: float
             Factor by which to scale the calculated noise
         """
-        noise = (scale * self.read_noise() *
-                 np.random.randn(*self.data.shape).astype(np.float32))
+        noise = scale * self.read_noise() * np.random.randn(*self.data.shape)
         if self.hdr.get('BUNIT', 'ADU').upper() == 'ADU':
             noise /= self.gain()
         self.add(noise)
@@ -527,7 +525,7 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
             must return pixel value of object at each pixel in image
         """
         ygrid, xgrid = np.mgrid[:self.data.shape[-2], :self.data.shape[-1]]
-        obj_data = obj(xgrid, ygrid).astype(np.float32)
+        obj_data = obj(xgrid, ygrid)
         self.add(obj_data)
 
     @convert_rd2xy
@@ -606,7 +604,7 @@ class AstroFaker(with_metaclass(abc.ABCMeta, object)):
                                 n_models=n_models)
 
         ygrid, xgrid = np.mgrid[:self.data.shape[-2], :self.data.shape[-1]]
-        obj_data = obj(xgrid, ygrid, model_set_axis=False).astype(np.float32)
+        obj_data = obj(xgrid, ygrid, model_set_axis=False)
         self.add(obj_data.sum(axis=0))
 
     @convert_rd2xy
