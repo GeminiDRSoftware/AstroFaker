@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "astrofaker"
+version = "0.2.0"
+dynamic = ["dependencies"]
+requires-python = ">=3.7"
+authors = [
+  {name = "Gemini Science User Support Department"},
+  {email = "sus_inquiries@gemini.edu"},
+]
+description = "Gemini Python package for generating artificial test data"
+readme = "README.md"
+license = { file = "LICENSE.rst" }
+keywords = ["astronomy", "data reduction", "testing"]
+classifiers = [
+        "Development Status :: 4 - Beta",
+        "Intended Audience :: Gemini Ops",
+        "Intended Audience :: Science/Research",
+        "License :: OSI Approved :: BSD License",
+        "Operating System :: POSIX :: Linux",
+        "Operating System :: Linux :: CentOS",
+        "Operating System :: MacOS :: MacOS X",
+        "Programming Language :: Python",
+        "Topic :: Gemini",
+        "Topic :: Data Reduction",
+        "Topic :: Scientific/Engineering :: Astronomy",
+]
+
+[project.optional-dependencies]
+docs = ["docutils>=0.3"]
+
+[project.urls]
+Homepage = "http://www.gemini.edu"
+# Documentation = "https://dragons.readthedocs.io"
+Repository = "https://github.com/GeminiDRSoftware/AstroFaker.git"
+"Bug Tracker" = "https://github.com/GeminiDRSoftware/AstroFaker/issues"
+# Changelog = "https://github.com/GeminiDRSoftware/AstroFaker/blob/master/CHANGES.rst"
+
+[tools.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[tool.setuptools.packages]
+find = {}
+

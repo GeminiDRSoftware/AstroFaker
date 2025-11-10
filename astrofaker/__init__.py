@@ -1,11 +1,11 @@
 from importlib import import_module
+from importlib.metadata import version, PackageNotFoundError
 
 from astrodata import factory
 from gemini_instruments.gemini import addInstrumentFilterWavelengths
 
 from .astrofaker import AstroFaker
 from .niri import AstroFakerNiri
-from ._version import version
 
 
 # Put in one place (i.e., here) all the stuff that the individual modules
@@ -31,4 +31,7 @@ add_instrument('niri')
 create = AstroFaker.create
 open = AstroFaker.open
 
-__version__ = version()
+try:
+    __version__ = version('astrofaker')
+except PackageNotFoundError:
+    __version__ = 'unknown'  # source checkout without building package
