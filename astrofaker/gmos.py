@@ -6,8 +6,13 @@
 import numpy as np
 from itertools import product as cart_product
 
-from gemini_instruments.gmos.adclass import AstroDataGmos
-from gemini_instruments.gmos import lookup
+# astrodata_gemini refactor.
+try:
+    from astrodata_gemini.gmos.adclass import AstroDataGmos
+    from astrodata_gemini.gmos import lookup
+except ModuleNotFoundError:
+    from gemini_instruments.gmos.adclass import AstroDataGmos
+    from gemini_instruments.gmos import lookup
 
 from .astrofaker import AstroFaker, noslice
 

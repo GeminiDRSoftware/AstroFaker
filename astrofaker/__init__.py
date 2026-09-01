@@ -2,7 +2,11 @@ from importlib import import_module
 from importlib.metadata import version, PackageNotFoundError
 
 from astrodata import factory
-from gemini_instruments.gemini import addInstrumentFilterWavelengths
+# astrodata_gemini refactor.
+try:
+    from astrodata_gemini.gemini import addInstrumentFilterWavelengths
+except ModuleNotFoundError:
+    from gemini_instruments.gemini import addInstrumentFilterWavelengths
 
 from .astrofaker import AstroFaker
 from .niri import AstroFakerNiri
@@ -12,14 +16,23 @@ from .niri import AstroFakerNiri
 # in gemini_instruments do. It makes things a bit cleaner.
 def add_instrument(instrument):
 
-    lookup = import_module(
-        '.{}.lookup'.format(instrument.lower()), 'gemini_instruments')
+    # astrodata_gemini refactor.
+    try:
+        lookup = import_module(
+            '.{}.lookup'.format(instrument.lower()), 'astrodata_gemini')
+    except ModuleNotFoundError:
+        lookup = import_module(
+            '.{}.lookup'.format(instrument.lower()), 'gemini_instruments')
 
     addInstrumentFilterWavelengths(instrument.upper(), lookup.filter_wavelengths)
     module = import_module('.{}'.format(instrument), __name__)
     cls = getattr(module, 'AstroFaker{}'.format(instrument.capitalize()))
 
-    factory.addClass(cls)
+    # astrodata refactor.
+    try:  # new astrodata
+        factory.add_class(cls)
+    except AttributeError:  # old astrodata
+        factory.addClass(cls)
 
 
 add_instrument('f2')

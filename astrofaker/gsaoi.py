@@ -3,7 +3,11 @@
 (some docstring here)
 """
 
-from gemini_instruments.gsaoi.adclass import AstroDataGsaoi
+# astrodata_gemini refactor.
+try:
+    from astrodata_gemini.gsaoi.adclass import AstroDataGsaoi
+except ModuleNotFoundError:
+    from gemini_instruments.gsaoi.adclass import AstroDataGsaoi
 
 from .astrofaker import AstroFaker, noslice
 

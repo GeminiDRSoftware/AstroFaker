@@ -3,7 +3,11 @@
 (some docstring here)
 """
 
-from gemini_instruments.gnirs.adclass import AstroDataGnirs
+# astrodata_gemini refactor.
+try:
+    from astrodata_gemini.gnirs.adclass import AstroDataGnirs
+except ModuleNotFoundError:
+    from gemini_instruments.gnirs.adclass import AstroDataGnirs
 
 from .astrofaker import AstroFaker, noslice
 

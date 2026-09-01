@@ -2,7 +2,11 @@
 """
 (some docstring here)
 """
-from gemini_instruments.f2.adclass import AstroDataF2
+# astrodata_gemini refactor.
+try:
+    from astrodata_gemini.f2.adclass import AstroDataF2
+except ModuleNotFoundError:
+    from gemini_instruments.f2.adclass import AstroDataF2
 
 from .astrofaker import AstroFaker, noslice
 
