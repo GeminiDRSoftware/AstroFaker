@@ -1,5 +1,3 @@
-from __future__ import print_function
-from future.utils import with_metaclass
 from builtins import object
 import abc
 
@@ -122,7 +120,7 @@ def convert_rd2xy(fn):
 
 
 ############################ ASTROFAKER CLASS ###############################
-class AstroFaker(with_metaclass(abc.ABCMeta, object)):
+class AstroFaker(abc.ABC):
     def __new__(cls, *args, **kwargs):
         """Since we never call an AstroFakerInstrument's __init__(), we set
         up the the internal attributes here"""
